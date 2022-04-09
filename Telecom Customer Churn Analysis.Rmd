@@ -1,0 +1,325 @@
+---
+title: "Telecom Customer Churn Prediction"
+author: "Xiaoying Yang, Bo Yang, Yin Tip Ho"
+date: "4/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem Statement
+需要陈述
+
+
+## Target
+
+Predict which characteristics of customers are most likely to lose and put forward suggestions for retaining users to the maximum extent according to the properties of losing customers.
+初稿
+
+## Data Description
+
+This data set consists of 100 variables and approximately 100 thousand records. 
+This data set contains different variables explaining the attributes of telecom industry and various factors considered important while dealing with customers of telecom industry. 
+The target variable here is churn which explains whether the customer will churn or not.
+
+#### Customer Usage Behavior  #1-48 需要添加col number，麻烦Bo Yang啦，把你的copy过来 
+
+* Price #1, 3, 6, 11
+* Calling #
+* Flow
+* Time 不太明白这个跟calling、flow的关系，只是说用的比较多吗
+
+#### Customer Atributes #50-99
+
+* Interaction with Telecom Operators
+* Family
+* Social Relations
+* Financial Assets
+* Facilities
+* Others
+
+#### Variable Description
+1 rev_Mean: Mean monthly revenue (charge amount)
+2 mou_Mean: Mean number of monthly minutes of use
+3 totmrc_Mean: Mean total monthly recurring charge
+4 da_Mean: Mean number of directory assisted calls
+5 ovrmou_Mean: Mean overage minutes of use
+6 ovrrev_Mean: Mean overage revenue
+7 vceovr_Mean: Mean revenue of voice overage
+8 datovr_Mean: Mean revenue of data overage
+9 roam_Mean: Mean number of roaming calls
+10 change_mou: Percentage change in monthly minutes of use vs previous three month average
+11 change_rev: Percentage change in monthly revenue vs previous three month average
+12 drop_vce_Mean: Mean number of dropped (failed) voice calls
+13 drop_dat_Mean: Mean number of dropped (failed) data calls
+14 blck_vce_Mean: Mean number of blocked (failed) voice calls
+15 blck_dat_Mean: Mean number of blocked (failed) data calls
+16 unan_vce_Mean: Mean number of unanswered voice calls
+17 unan_dat_Mean: Mean number of unanswered data calls
+18 plcd_vce_Mean: Mean number of attempted voice calls placed
+19 plcd_dat_Mean: Mean number of attempted data calls placed
+20 recv_vce_Mean: Mean number of received voice calls
+21 recv_sms_Mean: N
+22 comp_vce_Mean: Mean number of completed voice calls
+23 comp_dat_Mean: Mean number of completed data calls
+24 custcare_Mean: Mean number of customer care calls
+25 ccrndmou_Mean: Mean rounded minutes of use of customer care calls
+26 cc_mou_Mean: Mean unrounded minutes of use of customer care (see CUSTCARE_MEAN) calls
+27 inonemin_Mean: Mean number of inbound calls less than one minute
+28 threeway_Mean: Mean number of three way calls
+29 mou_cvce_Mean: Mean unrounded minutes of use of completed voice calls
+30 mou_cdat_Mean: Mean unrounded minutes of use of completed data calls
+31 mou_rvce_Mean: Mean unrounded minutes of use of received voice calls
+32 owylis_vce_Mean: Mean number of outbound wireless to wireless voice calls
+33 mouowylisv_Mean: Mean unrounded minutes of use of outbound wireless to wireless voice calls
+34 iwylis_vce_Mean: N
+35 mouiwylisv_Mean: Mean unrounded minutes of use of inbound wireless to wireless voice calls
+36 peak_vce_Mean: Mean number of inbound and outbound peak voice calls
+37 peak_dat_Mean: Mean number of peak data calls
+38 mou_peav_Mean: Mean unrounded minutes of use of peak voice calls
+39 mou_pead_Mean: Mean unrounded minutes of use of peak data calls
+40 opk_vce_Mean: Mean number of off-peak voice calls
+41 opk_dat_Mean: Mean number of off-peak data calls
+42 mou_opkv_Mean: Mean unrounded minutes of use of off-peak voice calls
+43 mou_opkd_Mean: Mean unrounded minutes of use of off-peak data calls
+44 drop_blk_Mean: Mean number of dropped or blocked calls
+45 attempt_Mean: Mean number of attempted calls
+46 complete_Mean: Mean number of completed calls
+47 callfwdv_Mean: Mean number of call forwarding calls
+48 callwait_Mean: Mean number of call waiting calls
+49 churn: Instance of churn between 31-60 days after observation date
+50 months: Total number of months in service
+51 uniqsubs: Number of unique subscribers in the household
+52 actvsubs: Number of active subscribers in household
+53 new_cell: New cell phone user
+54 crclscod: Credit class code
+55 asl_flag: Account spending limit
+56 totcalls: Total number of calls over the life of the customer
+57 totmou: Total minutes of use over the life of the cus
+58 totrev: Total revenue
+59 adjrev: Billing adjusted total revenue over the life of the customer
+60 adjmou: Billing adjusted total minutes of use over the life of the customer
+61 adjqty: Billing adjusted total number of calls over the life of the customer
+62 avgrev: Average monthly revenue over the life of the customer
+63 avgmou: Average monthly minutes of use over the life of the customer
+64 avgqty: Average monthly number of calls over the life of the customer
+65 avg3mou: Average monthly minutes of use over the previous three months
+66 avg3qty: Average monthly number of calls over the previous three months
+67 avg3rev: Average monthly revenue over the previous three months
+68 avg6mou: Average monthly minutes of use over the previous six months
+69 avg6qty: Average monthly number of calls over the previous six months
+70 avg6rev: Average monthly revenue over the previous six months
+71 prizm_social_one: Social group letter only
+72 area: Geogrpahic area
+73 dualband: Dualband
+74 refurb_new: Handset: refurbished or new
+75 hnd_price: Current handset price
+76 phones: Number of handsets issued
+77 models: Number of models issued
+78 hnd_webcap: Handset web capability
+79 truck: Truck indicator
+80 rv: RV indicator
+81 ownrent: Home owner/renter status
+82 lor: Length of residence
+83 dwlltype: Dwelling Unit type
+84 marital: Marital Status
+85 adults: Number of adults in household
+86 infobase: InfoBase match
+87 income: Estimated income
+88 numbcars: Known number of vehicles
+89 HHstatin: Premier household status indicator
+90 dwllsize: Dwelling size
+91 forgntvl: Foreign travel dummy variable
+92 ethnic: Ethnicity roll-up code
+93 kid0_2: Child 0 - 2 years of age in household
+94 kid3_5: Child 3 - 5 years of age in household
+95 kid6_10: Child 6 - 10 years of age in household
+96 kid11_15: Child 11 - 15 years of age in household
+97 kid16_17: Child 16 - 17 years of age in household
+98 creditcd: Credit card indicator
+99 eqpdays: Number of days (age) of current equipment
+100 Customer_ID: N
+
+## Project Guide 到时候做完再改动
+
+* Data Wrangling
+    + Missing Values 已完成，就是fill的部分看要不要优化
+    + Outliers Detection 基本定义完成，detection的方法未定
+    + 暂时想不到还有啥，到时候可以再加
+* Exploratory Data Analysis (EDA) 
+    + How much does customer spend on telecom monthly?
+    + 类似这种？看我们需不需要，就是比较麻烦，我只写了一个
+* Feature Engineering
+    + get dummies
+    + check correlation
+    + scaling 
+    + 或许需要transformation？？？？
+* Factor Analysis and Clustering
+* Regression Prediction
+    + 分出来training(60%), cross-validation(20%),testing(20%)
+
+## References
+https://www.kaggle.com/datasets/abhinav89/telecom-customer
+
+## CODE
+#### Data Wrangling
+
+* Import Data and load library
+建议把所有要用的library写在这啦，避免重复loading
+```{r Import Data and load library}
+    library(tidyverse)
+    library(zoo)
+    library(gtools)
+    library(naniar)
+    raw_data <- read_csv("Telecom_customer churn.csv")
+```
+
+* Missing Values
+Check missing values by column
+```{r Check missing values by column}
+    #check missing values by columns
+    raw_data %>% miss_var_summary()
+
+    #Remove the columns with more than 20% missing values 
+    telecom <- raw_data %>%
+        select(-c(numbcars, HHstatin, dwllsize, ownrent, dwlltype, lor,income, 
+                  adults, infobase)) %>%
+        select(-prizm_social_one) #remove umrelated col with high missing rate
+    
+    #Filling other calculated missing data with mean values
+    #我暂时用的mean，如果后面不合适可以改成median、knn那些
+    telecom$hnd_webcap = na.replace(telecom$hnd_webcap, 'UNKW') 
+    na_fill_mean = function(x){
+        na.fill(x,mean(x,na.rm=T))
+    } 
+    telecom$avg6qty = na_fill_mean(telecom$avg6qty) 
+    telecom$avg6rev = na_fill_mean(telecom$avg6rev) 
+    telecom$avg6mou = na_fill_mean(telecom$avg6mou)
+    telecom$change_mou = na_fill_mean(telecom$change_mou)
+    telecom$change_rev = na_fill_mean(telecom$change_rev)
+    telecom$rev_Mean = na_fill_mean(telecom$rev_Mean)
+    telecom$totmrc_Mean = na_fill_mean(telecom$totmrc_Mean)
+    telecom$da_Mean = na_fill_mean(telecom$da_Mean)
+    telecom$ovrmou_Mean = na_fill_mean(telecom$ovrmou_Mean)
+    telecom$ovrrev_Mean = na_fill_mean(telecom$ovrrev_Mean)
+    telecom$vceovr_Mean = na_fill_mean(telecom$vceovr_Mean)
+    telecom$datovr_Mean = na_fill_mean(telecom$datovr_Mean)
+    telecom$roam_Mean = na_fill_mean(telecom$roam_Mean)
+    telecom$mou_Mean = na_fill_mean(telecom$mou_Mean)
+    
+    #check col missing data again
+    telecom %>% 
+        miss_var_summary() %>%
+        filter(pct_miss > 0)
+```
+
+Check missing values by rows
+```{r Check missing values by rows}
+    row_na_idx = which(rowMeans(is.na(telecom))!= 0)
+    length(row_na_idx)
+    #There are 2587 rows that have some missing values. 
+    #It is too small compared to the total number of rows we will remove them
+    telecom = telecom[-row_na_idx,]
+    
+    #check row missing values again
+    which(is.na(telecom))
+```
+
+* Outliers Detection
+Subset different type of variables
+```{r Subset different type of variables}
+    #check data structure
+    str(telecom)
+    
+    #subset variables
+    var_cate = as.data.frame(sapply(telecom, typeof))
+    colnames(var_cate) = "data_type"
+    
+    num_col <- var_cate %>%
+        filter(data_type == "double") %>%
+        rownames()
+    
+    char_col <- var_cate %>%
+        filter(data_type == "character") %>%
+        rownames()
+    
+    #box plot of numeric variables
+    tele_num = telecom %>% select(num_col)
+    
+    #box plots
+    plot_list = list()
+    for (i in 1:nrow(tele_num)){
+        p = ggplot(data = telecom, 
+           aes(y = unlist(tele_num[,i]), x = colnames(tele_num[,i])))+
+            geom_boxplot(outlier.colour="red", 
+                     outlier.shape=8,
+                     outlier.size= 2) +
+            xlab(NULL) +
+            ylab(NULL) +
+            theme(panel.background = element_blank(),
+              panel.grid = element_blank())
+        plot_list[[i]] = p
+    }
+    Rmisc::multiplot(plotlist = plot_list, layout = matrix(1:75, nrow = 15))
+    
+    #method1： outlier detection
+    #好处是方便，直接找出所有异常值
+    #坏处是一刀切，没有办法判定异常的原因，直接就remove
+    detect_outliers = function(df,features){
+        outlier_idx = list()
+        for (c in features){
+            Q1 = quantile(df[c], 0.25)
+            Q3 = quantile(df[c], 0.75)
+            outlier_step = IQR(df[c], na.rm = T) * 1.5
+            outlier_list_col = which(df[(df[c] < Q1 - outlier_step) | 
+                                            (df[c] > Q3 + outlier_step)])
+        }
+        outlier_idx = list(outlier_idx, outlier_list_col)
+    }
+    outlier_idx = table(outlier_idx)
+    return (outlier_idx)
+    
+    #method2: 直接通过肉眼判断？？？？
+    summary(tele_num) #max跟madian/mean 相差比较多的那种
+    #好处是或许可以解释异常值原因再来判定要不要remove
+    #坏处是比较麻烦，variables数量比较多，要一个一个来
+    
+    #Method3: 通过聚类进行异常值检测
+    #https://blog.csdn.net/kicilove/article/details/76260350
+    #也是比较麻烦得一个一个来，但是应该准确率比较高
+```
+
+
+#### EDA
+How much does customer spend on telecom monthly?
+```{r}
+    range(telecom$rev_Mean, na.rm = T)
+
+    ggplot(data = telecom, aes(x = rev_Mean, fill = churn))+
+        geom_histogram() +
+        theme(panel.background = element_blank(),
+              panel.grid = element_blank())
+    
+    #因为没有处理异常值的原因所以看不出来啥
+```
+
+#### Feature Engineering
+
+Transform some numeric variables into factors because they are only 0 or 1.
+Create a separate data set without the churn variable (variable to predict) that will be the one we work on.
+Enumerate the rows of the data set with the Customers ID so we can identify each.
+Remove unnecessary variables with a correlation matrix, and remove some that are also not important.
+
+参考 https://www.kaggle.com/code/clustercode12/telecom-churn-analysis-with-r/notebook
+
+
+* get dummies
+```{r}
+
+```
+
+
+
+
