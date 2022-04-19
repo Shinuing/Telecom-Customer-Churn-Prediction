@@ -173,6 +173,8 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(zoo)
     library(gtools)
     library(naniar)
+    library(mice)
+    library(ggcorrplot)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -214,6 +216,39 @@ Check missing values by column
         miss_var_summary() %>%
         filter(pct_miss > 0)
 ```
+
+```{r remove missing value by mice}
+telecom1 <- telecom[, -77]
+var_miss <- which(colMeans(is.na(telecom1))!= 0)
+var_miss
+# 33 variables still have missing value.
+
+# Numeric type var
+nr_mice <- select_if(telecom1, negate(is.numeric))
+r_mice <- select_if(telecom1, is.numeric)
+na_mice <- r_mice[, c(69, 70, 74)]
+r_mice <- r_mice[, -c(69, 70, 74)]
+
+# Imputation by rf
+impute <- mice(r_mice, method = "rf", ntree = 50, m = 1, maxit = 1)
+telecom_complete <- complete(impute)
+any(is.na(telecom_complete))
+# Add non-numeric type var back to the data set
+telecom1 <- cbind(telecom_complete, na_mice, nr_mice)
+sum(is.na(telecom1))
+var_miss1 <- which(colMeans(is.na(telecom1))!= 0)
+var_miss1
+# Row missing value
+row_miss <- which(rowMeans(is.na(telecom1)) != 0)
+length(row_miss)
+
+telecom1 <- telecom1[-row_miss, ]
+
+save(telecom1, file = "telecom_Comsumer_Info.RData")
+
+
+```
+
 
 Check missing values by rows
 ```{r Check missing values by rows}
@@ -318,6 +353,45 @@ Remove unnecessary variables with a correlation matrix, and remove some that are
 * get dummies
 ```{r}
 
+
+# Function to transform variables
+REMOVE = "remove"
+TO_FACTOR = "tofactor"
+
+editCol <- function(colNames, df, todo) {
+  for(col in colNames) {
+    index <- which(names(df) == col)
+    if(!is_empty(index)) {
+      if(todo == REMOVE) {
+        df <- df[, -index]
+      } else if(todo == TO_FACTOR) {
+        df[, index]  <- as.factor(df[, index])
+      } else {errorCondition("Not performing well")}
+    }
+  }
+  return(df)
+}
+
+# Perform the function
+telecom1 <- editCol(c("forgntv1", "truck", "rv"), telecom1, TO_FACTOR)
+telecom1 <- droplevels.data.frame(telecom1)
+row.names(telecom1) <- telecom1$Customer_ID
+telecom_customer <- telecom1
+telecom1 <- editCol(c("churn", "Customer_ID"), telecom1, REMOVE)
+
+rm(list = setdiff(ls(), c("telecom1", "telecom_customer")))
+
+# Correlation matrix
+r_mice <- select_if(telecom1, is.numeric)
+Corr <- cor(r_mice)
+Corr[upper.tri(Corr)] = 0
+ggcorrplot(corr = Corr, method = "square", lab = FALSE)
+  # Need to eliminate strong correlated variables
+diag(Corr) = 0
+ 
+telecom_num_no_corr <-  r_mice[, !apply(Corr, 2, function(x) any(abs(x) > 0.9, na.rm = TRUE))]
+# How many variables are eliminated
+dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
 ```
 
 
