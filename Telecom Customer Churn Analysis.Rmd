@@ -145,17 +145,14 @@ The target variable here is churn which explains whether the customer will churn
 ## Project Guide 到时候做完再改动
 
 * Data Wrangling
-    + Missing Values 已完成，就是fill的部分看要不要优化
-    + Outliers Detection 基本定义完成，detection的方法未定
-    + 暂时想不到还有啥，到时候可以再加
-* Exploratory Data Analysis (EDA) 
-    + How much does customer spend on telecom monthly?
-    + 类似这种？看我们需不需要，就是比较麻烦，我只写了一个
+    + Missing Values 
 * Feature Engineering
     + get dummies
     + check correlation
     + scaling 
-    + 或许需要transformation？？？？
+* Exploratory Data Analysis (EDA) 
+    + How much does customer spend on telecom monthly?
+    + 类似这种？看我们需不需要，就是比较麻烦，我只写了一个
 * Factor Analysis and Clustering
 * Regression Prediction
     + 分出来training(60%), cross-validation(20%),testing(20%)
@@ -175,50 +172,23 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(naniar)
     library(mice)
     library(ggcorrplot)
+    library(rlang)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
 * Missing Values
-Check missing values by column
+
 ```{r Check missing values by column}
-    #check missing values by columns
-    raw_data %>% miss_var_summary()
+#check missing values by columns
+raw_data %>% miss_var_summary()
 
-    #Remove the columns with more than 20% missing values 
-    telecom <- raw_data %>%
-        select(-c(numbcars, HHstatin, dwllsize, ownrent, dwlltype, lor,income, 
-                  adults, infobase)) %>%
-        select(-prizm_social_one) #remove umrelated col with high missing rate
-    
-    #Filling other calculated missing data with mean values
-    #我暂时用的mean，如果后面不合适可以改成median、knn那些
-    telecom$hnd_webcap = na.replace(telecom$hnd_webcap, 'UNKW') 
-    na_fill_mean = function(x){
-        na.fill(x,mean(x,na.rm=T))
-    } 
-    telecom$avg6qty = na_fill_mean(telecom$avg6qty) 
-    telecom$avg6rev = na_fill_mean(telecom$avg6rev) 
-    telecom$avg6mou = na_fill_mean(telecom$avg6mou)
-    telecom$change_mou = na_fill_mean(telecom$change_mou)
-    telecom$change_rev = na_fill_mean(telecom$change_rev)
-    telecom$rev_Mean = na_fill_mean(telecom$rev_Mean)
-    telecom$totmrc_Mean = na_fill_mean(telecom$totmrc_Mean)
-    telecom$da_Mean = na_fill_mean(telecom$da_Mean)
-    telecom$ovrmou_Mean = na_fill_mean(telecom$ovrmou_Mean)
-    telecom$ovrrev_Mean = na_fill_mean(telecom$ovrrev_Mean)
-    telecom$vceovr_Mean = na_fill_mean(telecom$vceovr_Mean)
-    telecom$datovr_Mean = na_fill_mean(telecom$datovr_Mean)
-    telecom$roam_Mean = na_fill_mean(telecom$roam_Mean)
-    telecom$mou_Mean = na_fill_mean(telecom$mou_Mean)
-    
-    #check col missing data again
-    telecom %>% 
-        miss_var_summary() %>%
-        filter(pct_miss > 0)
-```
+#Remove the columns with more than 10% missing values 
+telecom <- raw_data %>%
+    select(-c(numbcars, HHstatin, dwllsize, ownrent, dwlltype, lor,income, 
+              adults, infobase, hnd_webcap)) %>%
+    select(-prizm_social_one)  #remove unrelated col with high missing rate
 
-```{r remove missing value by mice}
-telecom1 <- telecom[, -77]
+telecom1 <- telecom
 var_miss <- which(colMeans(is.na(telecom1))!= 0)
 var_miss
 # 33 variables still have missing value.
@@ -245,100 +215,8 @@ length(row_miss)
 telecom1 <- telecom1[-row_miss, ]
 
 save(telecom1, file = "telecom_Comsumer_Info.RData")
-
-
 ```
 
-
-Check missing values by rows
-```{r Check missing values by rows}
-    row_na_idx = which(rowMeans(is.na(telecom))!= 0)
-    length(row_na_idx)
-    #There are 2587 rows that have some missing values. 
-    #It is too small compared to the total number of rows we will remove them
-    telecom = telecom[-row_na_idx,]
-    
-    #check row missing values again
-    which(is.na(telecom))
-```
-
-* Outliers Detection
-Subset different type of variables
-```{r Subset different type of variables}
-    #check data structure
-    str(telecom)
-    
-    #subset variables
-    var_cate = as.data.frame(sapply(telecom, typeof))
-    colnames(var_cate) = "data_type"
-    
-    num_col <- var_cate %>%
-        filter(data_type == "double") %>%
-        rownames()
-    
-    char_col <- var_cate %>%
-        filter(data_type == "character") %>%
-        rownames()
-    
-    #box plot of numeric variables
-    tele_num = telecom %>% select(num_col)
-    
-    #box plots
-    plot_list = list()
-    for (i in 1:nrow(tele_num)){
-        p = ggplot(data = telecom, 
-           aes(y = unlist(tele_num[,i]), x = colnames(tele_num[,i])))+
-            geom_boxplot(outlier.colour="red", 
-                     outlier.shape=8,
-                     outlier.size= 2) +
-            xlab(NULL) +
-            ylab(NULL) +
-            theme(panel.background = element_blank(),
-              panel.grid = element_blank())
-        plot_list[[i]] = p
-    }
-    Rmisc::multiplot(plotlist = plot_list, layout = matrix(1:75, nrow = 15))
-    
-    #method1： outlier detection
-    #好处是方便，直接找出所有异常值
-    #坏处是一刀切，没有办法判定异常的原因，直接就remove
-    detect_outliers = function(df,features){
-        outlier_idx = list()
-        for (c in features){
-            Q1 = quantile(df[c], 0.25)
-            Q3 = quantile(df[c], 0.75)
-            outlier_step = IQR(df[c], na.rm = T) * 1.5
-            outlier_list_col = which(df[(df[c] < Q1 - outlier_step) | 
-                                            (df[c] > Q3 + outlier_step)])
-        }
-        outlier_idx = list(outlier_idx, outlier_list_col)
-    }
-    outlier_idx = table(outlier_idx)
-    return (outlier_idx)
-    
-    #method2: 直接通过肉眼判断？？？？
-    summary(tele_num) #max跟madian/mean 相差比较多的那种
-    #好处是或许可以解释异常值原因再来判定要不要remove
-    #坏处是比较麻烦，variables数量比较多，要一个一个来
-    
-    #Method3: 通过聚类进行异常值检测
-    #https://blog.csdn.net/kicilove/article/details/76260350
-    #也是比较麻烦得一个一个来，但是应该准确率比较高
-```
-
-
-#### EDA
-How much does customer spend on telecom monthly?
-```{r}
-    range(telecom$rev_Mean, na.rm = T)
-
-    ggplot(data = telecom, aes(x = rev_Mean, fill = churn))+
-        geom_histogram() +
-        theme(panel.background = element_blank(),
-              panel.grid = element_blank())
-    
-    #因为没有处理异常值的原因所以看不出来啥
-```
 
 #### Feature Engineering
 
@@ -349,11 +227,7 @@ Remove unnecessary variables with a correlation matrix, and remove some that are
 
 参考 https://www.kaggle.com/code/clustercode12/telecom-churn-analysis-with-r/notebook
 
-
-* get dummies
 ```{r}
-
-
 # Function to transform variables
 REMOVE = "remove"
 TO_FACTOR = "tofactor"
@@ -393,7 +267,47 @@ telecom_num_no_corr <-  r_mice[, !apply(Corr, 2, function(x) any(abs(x) > 0.9, n
 # How many variables are eliminated
 dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
 ```
+```{r}
+ #hist
+    par(mfrow = c(3,4))
+    for (i in 1:ncol(telecom_num_no_corr)){
+        hist(telecom_num_no_corr[,i],
+             breaks = 30,
+             main = "",ylab = "",
+             xlab = names(telecom_num_no_corr)[i],
+             cex.axis=0.5,
+             cex.lab = 0.6)
+    }
+    
+    #scaling and his again
+    telecom_num_scale = scale(telecom_num_no_corr)
+     par(mfrow = c(3,4))
+    for (i in 1:ncol(telecom_num_scale)){
+        hist(telecom_num_scale[,i],
+             breaks = 30,
+             main = "",ylab = "",
+             xlab = names(telecom_num_no_corr)[i],
+             cex.axis=0.5,
+             cex.lab = 0.6)
+    }
+
+    
+```
 
 
+
+
+#### EDA
+e.g How much does customer spend on telecom monthly?
+```{r}
+    range(telecom$rev_Mean, na.rm = T)
+
+    ggplot(data = telecom, aes(x = rev_Mean, fill = churn))+
+        geom_histogram() +
+        theme(panel.background = element_blank(),
+              panel.grid = element_blank())
+    
+    #因为没有处理异常值的原因所以看不出来啥
+```
 
 
