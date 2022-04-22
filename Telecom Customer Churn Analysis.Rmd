@@ -287,7 +287,7 @@ dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
     }
     
     #scaling and his again
-    telecom_num_scale = scale(telecom_num_no_corr)
+    telecom_num_scale = as.data.frame(scale(telecom_num_no_corr))
      par(mfrow = c(3,4))
     for (i in 1:ncol(telecom_num_scale)){
         hist(telecom_num_scale[,i],
@@ -298,7 +298,7 @@ dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
              cex.lab = 0.6)
     }
 
-    
+    save(telecom_num_scale, file = "telecom_num_scale.RData")
 ```
 
 
@@ -339,6 +339,69 @@ fviz_pca_ind(pca_tele,
 #testing function:  pls no error
 ```
 
+#### Factor Analysis
+
+```{r}
+colsImportant = c()
+
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 1], decreasing = TRUE)[1:21]))
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 2], decreasing = TRUE)[1:8]))
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 1], decreasing = TRUE)[1:5]))
+
+colsImportant = unique(colsImportant)
+```
+```
+As the variables are too big for the factor analysis, we will reduce it. 
+We use PCA with the most important variables of the PCs to reduce it. 
+We use the ones that are high enough, given by the graphs above.
+```
+```{r}
+#remove the not so important variables and then do factor analysis
+tele_num_scale_imp = telecom_num_scale %>%
+    select(c(colsImportant))
+
+x.f = factanal(tele_num_scale_imp, factors = 5,
+               rotation="none", scores="regression")
+
+factor = cbind(x.f$loadings, x.f$uniquenesses)
+#factor
+
+#graph each factor 
+par(mfrow=c(3,1))
+barplot(x.f$loadings[,1], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,2], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,3], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,4], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,5], las=2, col="darkblue", ylim = c(-1, 1))
+
+```
+```
+In the graph, at first sight we can discard the 4, 5 factors as they are not pretty
+much meaningful in any manner. 
+Also the factor 3 does not look like anything that important.
+
+However, factors 1 and 2 show really interesting inverse correlations. 
+They differ on the exact variables and show that the characteristics of the two type
+of customers are opposite. They are the contrary, this could mean that ones are the
+ones with churn = 1 (left the company) and the others the ones that stay. 
+Also, looking at the data and the variables, the first factor can be the customers
+that remain in the company, and the second factor the ones that leave the company.
+
+This means that the first factors can contribute to the churn variable to be
+negative, and the opposite for the second factor.
+```
+
+```{r}
+#check 1 and 2 factors again
+par(mfrow=c(2,1))
+barplot(x.f$loadings[,1], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,2], las=2, col="darkblue", ylim = c(-1, 1))
+
+# clean the environment.
+rm(list = c("colsImportant")) 
 ```
 
 
