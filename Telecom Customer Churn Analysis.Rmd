@@ -2,7 +2,7 @@
 title: "Telecom Customer Churn Prediction"
 author: "Xiaoying Yang, Bo Yang, Yin Tip Ho"
 date: "4/28/2022"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -297,14 +297,9 @@ ggplot2.histogram(telecom_num_no_corr,
 #### EDA
 e.g How much does customer spend on telecom monthly?
 ```{r}
-    range(telecom$rev_Mean, na.rm = T)
+ggplot(data = raw_data, aes(x = churn, y = rev_Mean))+
+  geom_bar(position='dodge', stat='identity')
 
-    ggplot(data = telecom, aes(x = rev_Mean, fill = churn))+
-        geom_histogram() +
-        theme(panel.background = element_blank(),
-              panel.grid = element_blank())
-    
-    #因为没有处理异常值的原因所以看不出来啥
 ```
 
 
