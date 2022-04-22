@@ -287,8 +287,6 @@ dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
              cex.axis=0.5,
              cex.lab = 0.6)
     }
-
-ggplot2.histogram(telecom_num_no_corr,
 ```
 
 
