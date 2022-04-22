@@ -2,15 +2,18 @@
 title: "Telecom Customer Churn Prediction"
 author: "Xiaoying Yang, Bo Yang, Yin Tip Ho"
 date: "4/28/2022"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Problem Statement
-需要陈述
+
+# Abstract
+
+
+# Introduction
 
 
 ## Target
@@ -272,17 +275,7 @@ telecom_num_no_corr <-  r_mice[, !apply(Corr, 2, function(x) any(abs(x) > 0.9, n
 dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
 ```
 ```{r}
- #hist
-    par(mfrow = c(3,4))
-    for (i in 1:ncol(telecom_num_no_corr)){
-        hist(telecom_num_no_corr[,i],
-             breaks = 30,
-             main = "",ylab = "",
-             xlab = names(telecom_num_no_corr)[i],
-             cex.axis=0.5,
-             cex.lab = 0.6)
-    }
-    
+
     #scaling and his again
     telecom_num_scale = scale(telecom_num_no_corr)
      par(mfrow = c(3,4))
@@ -295,7 +288,7 @@ dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
              cex.lab = 0.6)
     }
 
-    
+ggplot2.histogram(telecom_num_no_corr,
 ```
 
 
