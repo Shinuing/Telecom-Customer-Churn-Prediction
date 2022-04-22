@@ -362,6 +362,8 @@ We use the ones that are high enough, given by the graphs above.
 #remove the not so important variables and then do factor analysis
 tele_num_scale_imp = telecom_num_scale %>%
     select(c(colsImportant))
+save(tele_num_scale_imp, file = "tele_num_scale_imp.RData")
+
 
 x.f = factanal(tele_num_scale_imp, factors = 5,
                rotation="none", scores="regression")
@@ -404,11 +406,29 @@ barplot(x.f$loadings[,2], las=2, col="darkblue", ylim = c(-1, 1))
 rm(list = c("colsImportant")) 
 ```
 
-####Clus
-tering
+####Clustering
 ```{r}
+nFolds = 6
+folds = sample(rep(1:nFolds, length.out = nrow(tele_num_scale_imp)))
 
+for (i in 1:nFolds) {
+    X = as.data.frame(tele_num_scale_imp)[which(folds == i), ]
+
+    print(fviz_nbclust(X, kmeans, method = 'silhouette'))
+}
 ```
+
+Here, the graph indicates that mostly 3 clusters is the base clustering that we can make. 
+And finally we will use a simple boostrapping to really know the best. However, as
+boostrapping is really computationally expensive, we will do it for just one fold.
+
+```{r}
+#跑不出来，跑了40min, 跑爆了
+X = as.data.frame(tele_num_scale_imp)[which(folds == 1), ]
+
+fviz_nbclust(X, kmeans, method = 'gap_stat', k.max = 8)
+```
+
 
 
 #### EDA
