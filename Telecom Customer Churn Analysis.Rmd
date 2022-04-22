@@ -260,6 +260,10 @@ r_mice <- select_if(telecom1, is.numeric)
 Corr <- cor(r_mice)
 Corr[upper.tri(Corr)] = 0
 ggcorrplot(corr = Corr, method = "square", lab = FALSE)
+# correlation heat-map
+col<- colorRampPalette(c("blue", "white", "red"))(20)
+heatmap(x = Corr, col = col, symm = TRUE)
+
   # Need to eliminate strong correlated variables
 diag(Corr) = 0
  
