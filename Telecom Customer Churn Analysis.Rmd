@@ -404,7 +404,11 @@ barplot(x.f$loadings[,2], las=2, col="darkblue", ylim = c(-1, 1))
 rm(list = c("colsImportant")) 
 ```
 
+####Clus
+tering
+```{r}
 
+```
 
 
 #### EDA
