@@ -499,7 +499,7 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 
 ####Categorical Variables
 ```{r}
-tele_cate <- select_if(telecom1, is.character)
+
 ```
 
 
