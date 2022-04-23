@@ -174,6 +174,7 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(ggcorrplot)
     library(rlang)
     library(factoextra)
+    library(kernlab)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -407,6 +408,7 @@ rm(list = c("colsImportant"))
 ```
 
 ####Clustering
+
 ```{r}
 nFolds = 6
 folds = sample(rep(1:nFolds, length.out = nrow(tele_num_scale_imp)))
@@ -427,6 +429,72 @@ boostrapping is really computationally expensive, we will do it for just one fol
 X = as.data.frame(tele_num_scale_imp)[which(folds == 1), ]
 
 fviz_nbclust(X, kmeans, method = 'gap_stat', k.max = 8)
+```
+```{r Kmeans}
+X = as.data.frame(scale(tele_num_scale_imp))
+
+#Considering three clusters
+fit = kmeans(X, centers=3, nstart=100)
+groups = fit$cluster
+
+#Now, we will graph the number of ocurrencies for each group.
+barplot(table(groups), col="#69b3a2")
+
+#Here we see that there is a group with most of the customers, and other not so big. However, the second group is almost ineligible.  The hypothesis could be as the one we had before. One group can correspond to customers that left the company and other to the ones that remain. First, we will develop this cluster further, and then let's see if we can get the same hypothesis with other clustering methods.
+
+centers = fit$centers
+
+for (i in 1:3) {
+    bar1=barplot(centers[i,], las=2, col="darkblue", ylim=c(-2,100),
+                 main=paste("Cluster", i,
+                            ": Group center in blue, global center in red"))
+    print(points(bar1,y=apply(X, 2, quantile, 0.50),col="red",pch=19))
+}
+
+#Here, we can clearly see that the group with less values, is like a mix cluster.  The third cluster has much more higher values that other cluster, and this can mean that the customers from the third group are more radical and therefore have more probabilty to leave the company.
+
+#ploting the cluster
+fviz_cluster(fit, data = X, 
+             geom = c("point"),
+             ellipse.type = 'norm', 
+             pointsize=1)+
+    scale_fill_brewer(palette="Paired") +
+    theme(panel.grid = element_blank(),
+          panel.background = element_blank())
+
+#Here we can see some minor differences and see that the most populated cluster (cluster 3) is at the left foremost part, followed by the first cluster and finally the second. This shows that number 2 are the most extreme customers and 1 the most common.    
+```
+```{r Mahalanobis distance K-Means}
+S_x = cov(X)
+iS = solve(S_x)
+e = eigen(iS)
+V = e$vectors
+B = V %*% diag(sqrt(e$values)) %*% t(V)
+Xtil = scale(X,scale = FALSE)
+X_maha = as.data.frame(Xtil %*% B)
+
+options(warn = -1)
+fit.mahalanobis = kmeans(X_maha, centers=3, nstart=100)
+groups = fit.mahalanobis$cluster
+centers=fit.mahalanobis$centers
+colnames(centers)=colnames(X)
+#centers
+barplot(table(groups), col="#69b3a2")
+
+for (i in 1:3) {
+    bar1=barplot(centers[i,], las=2, col="darkblue", ylim=c(-2,2), main=paste("Cluster", i,": Group center in blue, global center in red"))
+    points(bar1,y=apply(X, 2, quantile, 0.50),col="red",pch=19)
+}
+
+#Not really the same. It is a little bit weird because the cluster that did not matter has a lot of outlier variables , whereas the most populated cluster (cluster 3) is almost 0. 
+
+fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
+             ellipse.type = 'norm', pointsize=1)+
+    scale_fill_brewer(palette="Paired")+
+    theme(panel.grid = element_blank(),
+          panel.background = element_blank())
+
+#The most popular clusters (cluster 2) are remain the same 
 ```
 
 
