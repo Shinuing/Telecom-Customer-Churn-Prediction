@@ -497,6 +497,10 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 #The most popular clusters (cluster 2) are remain the same 
 ```
 
+####Categorical Variables
+```{r}
+tele_cate <- select_if(telecom1, is.character)
+```
 
 
 #### EDA
