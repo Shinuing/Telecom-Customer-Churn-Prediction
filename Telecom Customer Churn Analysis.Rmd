@@ -663,7 +663,7 @@ table(y_train)
 
 
 #assume 10-fold cv
-loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, 
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
                      nfold = 5, family = binomial)
 
 ```
