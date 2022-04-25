@@ -546,16 +546,16 @@ library(caret)
 tuneGrid = expand.grid(.mtry = c(1:20))
 trControl = trainControl(method = "cv", number = 10)
 
-rf_mtry = train(as.factor(churn)~., data=df1, method = "rf", metric = "Accuracy", tuneGrid = tuneGrid, trControl = trControl,
+rf_mtry = train(as.factor(churn)~., data=df, method = "rf", metric = "Accuracy", tuneGrid = tuneGrid, trControl = trControl,
              num.trees = 100,
              respect.unordered.factors = "partition")
 best.mtry = rf_mtry$bestTurn$mtry
 
 store.maxnode = list()
 TurneGrid = expand.grid(.mtry = best.mtry)
-for (maxnodes in 2:20){
+for (maxnodes in 2:10){
   set.seed(1)
-  rf_maxnode = train(as.factor(churn)~., data=df1, method = "rf", metric = "Accuracy", tuneGrid = TuneGrid, trControl = trControl,
+  rf_maxnode = train(as.factor(churn)~., data=tele_cate, method = "rf", metric = "Accuracy", tuneGrid = TuneGrid, trControl = trControl,
              ntrees = 300,
              maxnodes = 10 )
   current_iteration <- toString(nodeize)
@@ -590,7 +590,7 @@ library(e1071)
   cost.grid = expand.grid(cost = seq(0.01, 2, length = 20))
   train_control = trainControl(method="repeatedcv", number=10, repeats=3)
   
-  svm2 <- train(as.factor(Y) ~ X, data = df1, method = "svmLinear2", 
+  svm2 <- train(y_train ~ X_train, data = df.train, method = "svmLinear2", 
                 trControl = train_control,  
                 tuneGrid = cost.grid)
 ```
@@ -599,36 +599,44 @@ library(e1071)
 ```{r}
 library(glmnet)
 # Elastic Net
-
-cvfit = cv.glmnet(as.matrix(X), Y, family = "binomial", alpha=0.4, type.measure = "class")
-
-cvfit = cv.glmnet(X, as.factor(Y), family = "binomial", alpha=0.4, type.measure = "class")
-
+cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class")
 plot(cvfit)
-cmat = confusion.glmnet(cvfit, newx = xtrain, newy = ytrain)
+cvfit$index
+coef(cvfit, s=cvfit$lambda.min)
+cmat = confusion.glmnet(cvfit, newx = data.matrix(X_test), newy = y_test)
 cmat
 ```
 
 
 
-```{r}
-library(glmnet)
-# Random Spliting
-fit <- glmnet(xtrain, ytrain, family="binomial", nlambda=6)
-result <- assess.glmnet(fit1, newx=xtrain, newy=ytrain)
-```
+
 
 
 ```{r}
+#ROC
 library(glmnet)
-cvfit1 = cv.glmnet(xtrain, ytrain, family = "binomial", alpha=0.4,
-                    nlambda = 5, type.measure="auc", keep=TRUE)
-rocs = roc.glmnet(cvfit1$fit.preval, newy = df0$churn)
-rocs
-cvresults1 = assess.glmnet(cvfit1, newx = xtrain, newy = ytrain,
-                           s = "lambda.1se")
-
+cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 26, type.measure="auc", keep=TRUE)
+cvfit1$index
+rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
+best = cvfit1$index["min",]
+par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
+invisible(sapply(rocs, lines, col="orange"))
+lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 ```
+
+
+
+```{r}
+#AUC
+ypred = 1*(predict(cvfit, newx= data.matrix(X_test),
+                   s="lambda.min", type="response")>0.5)
+cmat2 = table(ypred, ytrue=y_test)
+cmat2
+sens = cmat2["1","1"]/(cmat2["0","1"]+cmat2["1","1"])
+spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
+data.frame(sens, spec)
+```
+
 
 
 
