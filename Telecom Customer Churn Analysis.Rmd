@@ -633,7 +633,7 @@ ypred = 1*(predict(cvfit, newx= data.matrix(X_test),
                    s="lambda.min", type="response")>0.5)
 cmat2 = table(ypred, ytrue=y_test)
 cmat2
-sens = cmat2["1","1"]/(cmat2["0","1"]+cmat2["1","1"])
+sens = cmat2["1","1"]/(cmat2["s0","1"]+cmat2["1","1"])
 spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
 data.frame(sens, spec)
 ```
