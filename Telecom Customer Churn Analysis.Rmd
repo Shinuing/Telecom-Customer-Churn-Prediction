@@ -568,7 +568,7 @@ cvresults1 = assess.glmnet(cvfit1, newx = xtrain, newy = ytrain,
 # error
 library(randomForest)
 rf.fit = randomForest(X, as.factor(Y), ntree = 1000, 
-                        mtry = 6, nodesize = 10, sampsize = 300,
+                        mtry = 1, nodesize = 10, sampsize = 300,
                         importance=TRUE)
 ```
 
