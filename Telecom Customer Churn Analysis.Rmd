@@ -535,7 +535,11 @@ ytest = df0[-s,df0$churn]
 ```{r}
 library(glmnet)
 # Elastic Net
+
 cvfit = cv.glmnet(X, Y, family = "binomial", alpha=0.4, type.measure = "class")
+
+cvfit = cv.glmnet(X, as.factor(Y), family = "binomial", alpha=0.4, type.measure = "class")
+
 plot(cvfit)
 cmat = confusion.glmnet(cvfit, newx = xtrain, newy = ytrain)
 ```
