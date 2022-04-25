@@ -177,6 +177,7 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(kernlab)
     library(glmnet)
     library(fastDummies)
+    library(caret)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -639,6 +640,15 @@ data.frame(sens, spec)
 
 
 
+```{r knn}
+control = trainControl(method = "cv", number = 10)
+set.seed(157)
+knn.cvfit <- train(y ~., method = "knn",
+                   data = data.frame("x" = X_train, "y" = y_train),
+                   tuneGrid = data.frame(k = seq(1,10,1)),
+                   trControl = control)
+
+```
 
 
 
