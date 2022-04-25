@@ -499,34 +499,45 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 ```
 
 ####Categorical Variables
-```{r}
-tele_num_scale_imp$Customer_ID = rownames(tele_num_scale_imp) 
-df = na.omit(merge(tele_num_scale_imp, raw_data, by = "Customer_ID"))
-df1 = select(df, -c("Customer_ID"))
-df1[grep("kid", names(df))] = ifelse(df1[grep("kid", names(df))] == "Y", 1, 0)
-df1$kid0_2 = ifelse(df1$kid0_2 =="Y", 1, 0)
-df1$infobase = ifelse(df1$infobase =="M", 1,0)
-df1$asl_flag = ifelse(df1$asl_flag == "Y", 1, 0)
-df1$refurb_new = ifelse(df1$refurb_new == "R", 1, 0)
-df1$creditcd = ifelse(df1$creditcd =="Y", 1, 0)
-df1$hnd_webcap = ifelse(df1$hnd_webcap == "WCMB", 1, 0)
-df1$ownrent = ifelse(df1$ownrent == "R", 1, 0)
-df1$dwlltype = ifelse(df1$dwlltype == "M", 1,0)
-categorical = colnames(df1[, sapply(df1, class) == "character"])
-df1[, categorical] = lapply(df1[, categorical], factor)
+
+
+```{r cateorical variables}
+#subset and get dummies
+tele_cate = select_if(telecom1, is.character)
+tele_cate = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
+tele_cate = tele_cate[,-c(1:14)]
+
+df = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
+df = df %>% rename(churn = `telecom1$churn`)
+#split
+set.seed(157)
+train <- sample(nrow(df), 0.7*nrow(df))
+df.train <- df[train,]
+df.test <- df[-train,]
+
+X_train = df.train[,-147]
+y_train = df.train[,147]
+X_test = df.test[,-147]
+y_test = df.test[,147]
+
+#remove large data
+#rm(tele_cate, tele_num_scale_imp, telecom_num_scale, telecom1)
 ```
 
-```{r}
-X = df1[, -df1$churn]
-Y = df1[,df1$churn]
-set.seed(1)
-s = sample(nrow(df1), nrow(df1)*0.6)
-df0 = df1[s,]
-xtrain = df0[s,-df0$churn]
-ytrain = df0[s,df0$churn]
-xtest = data.matrix(df0[-s,-df0$churn])
-ytest = df0[-s,df0$churn]
+```{r logistic regression}
+table(y_train)
+
+#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
+#predict(logistic.fit, newdata = df.test, type = "response)
+
+
+#assume 10-fold cv
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
+                     nfold = 5, family = binomial)
+
 ```
+
+
 
 
 ```{r rf}
@@ -631,42 +642,6 @@ cvresults1 = assess.glmnet(cvfit1, newx = xtrain, newy = ytrain,
 
 
 
--------------------分割线
-```{r cateorical variables}
-#subset and get dummies
-tele_cate = select_if(telecom1, is.character)
-tele_cate = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
-tele_cate = tele_cate[,-c(1:14)]
-
-df = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
-df = df %>% rename(churn = `telecom1$churn`)
-#split
-set.seed(157)
-train <- sample(nrow(df), 0.7*nrow(df))
-df.train <- df[train,]
-df.test <- df[-train,]
-
-X_train = df.train[,-147]
-y_train = df.train[,147]
-X_test = df.test[,-147]
-y_test = df.test[,147]
-
-#remove large data
-#rm(tele_cate, tele_num_scale_imp, telecom_num_scale, telecom1)
-```
-
-```{r logistic regression}
-table(y_train)
-
-#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
-#predict(logistic.fit, newdata = df.test, type = "response)
-
-
-#assume 10-fold cv
-loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
-                     nfold = 5, family = binomial)
-
-```
 
 
 
