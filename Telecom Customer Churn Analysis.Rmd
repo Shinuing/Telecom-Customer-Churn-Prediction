@@ -175,6 +175,8 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(rlang)
     library(factoextra)
     library(kernlab)
+    library(glmnet)
+    library(fastDummies)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -425,7 +427,6 @@ And finally we will use a simple boostrapping to really know the best. However, 
 boostrapping is really computationally expensive, we will do it for just one fold.
 
 ```{r}
-#跑不出来，跑了40min, 跑爆了
 X = as.data.frame(tele_num_scale_imp)[which(folds == 1), ]
 
 fviz_nbclust(X, kmeans, method = 'gap_stat', k.max = 8)
@@ -573,15 +574,42 @@ rf.fit = randomForest(X, as.factor(Y), ntree = 1000,
                         importance=TRUE)
 ```
 
+-------------------分割线
+```{r cateorical variables}
+#subset and get dummies
+tele_cate = select_if(telecom1, is.character)
+tele_cate = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
+tele_cate = tele_cate[,-c(1:14)]
+
+df = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
+df = df %>% rename(churn = `telecom1$churn`)
+#split
+set.seed(157)
+train <- sample(nrow(df), 0.7*nrow(df))
+df.train <- df[train,]
+df.test <- df[-train,]
+
+X_train = df.train[,-147]
+y_train = df.train[,147]
+X_test = df.test[,-147]
+y_test = df.test[,147]
+
+#remove large data
+#rm(tele_cate, tele_num_scale_imp, telecom_num_scale, telecom1)
+```
+
+```{r logistic regression}
+table(y_train)
+
+#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
+#predict(logistic.fit, newdata = df.test, type = "response)
 
 
-
-#### EDA
-e.g How much does customer spend on telecom monthly?
-```{r}
-    
-    
+#assume 10-fold cv
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, 
+                     nfold = 5, family = binomial)
 
 ```
+
 
 
