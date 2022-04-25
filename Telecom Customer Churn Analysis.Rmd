@@ -597,7 +597,7 @@ library(e1071)
 ```
 
 
-```{r}
+```{r en}
 library(glmnet)
 # Elastic Net
 cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class")
@@ -613,7 +613,7 @@ cmat
 
 
 
-```{r}
+```{r roc}
 #ROC
 library(glmnet)
 cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 26, type.measure="auc", keep=TRUE)
@@ -627,7 +627,7 @@ lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 
 
 
-```{r}
+```{r auc}
 #AUC
 ypred = 1*(predict(cvfit, newx= data.matrix(X_test),
                    s="lambda.min", type="response")>0.5)
