@@ -646,11 +646,7 @@ data.frame(sens, spec)
 
 
 
-```{r}
-fullmod = glm(churn~., family = binomial, data = telecom1)
-backward.aic = step(fullmod, direction = "backward", trace = 0)
-summary(backward.aic)
-```
+
 
 
 
