@@ -516,36 +516,57 @@ df1[, categorical] = lapply(df1[, categorical], factor)
 ```
 
 ```{r}
-X = df1[, -df1$churn]
+X = data.matrix(df1[, -df1$churn])
 Y = df1[,df1$churn]
 set.seed(1)
 s = sample(nrow(df1), nrow(df1)*0.6)
 df0 = df1[s,]
-xtrain = df0[s,-df0$churn]
+xtrain = data.matrix(df0[s,-df0$churn])
 ytrain = df0[s,df0$churn]
-xtest = df0[-s,-df0$churn]
+xtest = data.matrix(df0[-s,-df0$churn])
 ytest = df0[-s,df0$churn]
 ```
 
 
+
+
+
+
 ```{r}
+library(glmnet)
+# Elastic Net
+cvfit = cv.glmnet(X, Y, family = "binomial", alpha=0.4, type.measure = "class")
+plot(cvfit)
+cmat = confusion.glmnet(cvfit, newx = xtrain, newy = ytrain)
+```
+
+
+
+```{r}
+# Random Spliting
+fit <- glmnet(xtrain, ytrain, family="binomial", nlambda=6)
+result <- assess.glmnet(fit1, newx=xtrain, newy=ytrain)
+```
+
+
+```{r}
+cvfit1 = cv.glmnet(xtrain, ytrain, family = "binomial", alpha=0.2,
+                    nlambda = 30, type.measure="auc", keep=TRUE)
+rocs = roc.glmnet(cvfit1$fit.preval, newy = df0$churn)
+cvresults1 = assess.glmnet(cvfit1, newx = xtrain, newy = ytrain,
+                           s = "lambda.1se")
+
+```
+
+
+
+```{r}
+# error
 library(randomForest)
 rf.fit = randomForest(X, as.factor(Y), ntree = 1000, 
                         mtry = 6, nodesize = 10, sampsize = 300,
                         importance=TRUE)
 ```
-
-
-
-
-
-
-```{r}
-
-```
-
-
-
 
 
 
