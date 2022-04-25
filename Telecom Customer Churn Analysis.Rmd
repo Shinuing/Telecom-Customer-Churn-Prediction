@@ -499,21 +499,63 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 
 ####Categorical Variables
 ```{r}
+tele_num_scale_imp$Customer_ID = rownames(tele_num_scale_imp) 
+df = na.omit(merge(tele_num_scale_imp, raw_data, by = "Customer_ID"))
+df1 = select(df, -c("Customer_ID"))
+df1[grep("kid", names(df))] = ifelse(df1[grep("kid", names(df))] == "Y", 1, 0)
+df1$kid0_2 = ifelse(df1$kid0_2 =="Y", 1, 0)
+df1$infobase = ifelse(df1$infobase =="M", 1,0)
+df1$asl_flag = ifelse(df1$asl_flag == "Y", 1, 0)
+df1$refurb_new = ifelse(df1$refurb_new == "R", 1, 0)
+df1$creditcd = ifelse(df1$creditcd =="Y", 1, 0)
+df1$hnd_webcap = ifelse(df1$hnd_webcap == "WCMB", 1, 0)
+df1$ownrent = ifelse(df1$ownrent == "R", 1, 0)
+df1$dwlltype = ifelse(df1$dwlltype == "M", 1,0)
+categorical = colnames(df1[, sapply(df1, class) == "character"])
+df1[, categorical] = lapply(df1[, categorical], factor)
+```
+
+```{r}
+X = df1[, -df1$churn]
+Y = df1[,df1$churn]
+set.seed(1)
+s = sample(nrow(df1), nrow(df1)*0.6)
+df0 = df1[s,]
+xtrain = df0[s,-df0$churn]
+ytrain = df0[s,df0$churn]
+xtest = df0[-s,-df0$churn]
+ytest = df0[-s,df0$churn]
+```
+
+
+```{r}
+library(randomForest)
+rf.fit = randomForest(X, as.factor(Y), ntree = 1000, 
+                        mtry = 6, nodesize = 10, sampsize = 300,
+                        importance=TRUE)
+```
+
+
+
+
+
+
+```{r}
 
 ```
+
+
+
+
+
 
 
 #### EDA
 e.g How much does customer spend on telecom monthly?
 ```{r}
-    range(telecom$rev_Mean, na.rm = T)
-
-    ggplot(data = telecom, aes(x = rev_Mean, fill = churn))+
-        geom_histogram() +
-        theme(panel.background = element_blank(),
-              panel.grid = element_blank())
     
-    #因为没有处理异常值的原因所以看不出来啥
+    
+
 ```
 
 
