@@ -529,18 +529,7 @@ y_test = df.test[,147]
 #rm(tele_cate, tele_num_scale_imp, telecom_num_scale, telecom1)
 ```
 
-```{r logistic regression}
-table(y_train)
 
-#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
-#predict(logistic.fit, newdata = df.test, type = "response)
-
-
-#assume 10-fold cv
-loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
-                     nfold = 5, family = binomial)
-
-```
 
 
 
@@ -601,15 +590,30 @@ library(e1071)
 ```
 
 
+```{r logistic regression}
+table(y_train)
+
+#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
+#predict(logistic.fit, newdata = df.test, type = "response)
+
+
+#assume 10-fold cv
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5, nfold = 5, family = binomial)
+plot(loglik.fit)
+```
+
+
 ```{r en}
 library(glmnet)
 # Elastic Net
-cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class")
+cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class",nfold = 10)
 plot(cvfit)
 cvfit$index
+plot(cvfit$glmnet.fit, "lambda")
 coef(cvfit, s=cvfit$lambda.min)
 cmat = confusion.glmnet(cvfit, newx = data.matrix(X_test), newy = y_test)
 cmat
+
 ```
 
 
@@ -620,7 +624,7 @@ cmat
 ```{r roc}
 #ROC
 library(glmnet)
-cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 26, type.measure="auc", keep=TRUE)
+cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", nlambda = 28, type.measure="auc", keep=TRUE, nfold = 5)
 cvfit1$index
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
 best = cvfit1$index["min",]
@@ -628,7 +632,33 @@ par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
 invisible(sapply(rocs, lines, col="orange"))
 lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 
-cmat2 = confusion.glmnet(cvfit1, newx = data.matrix(X_test), newy = y_test)
+
+```
+
+
+```{r}
+library(glmnet)
+# set alpha's domain 
+alpha0 = seq(0, 1, 0.2)
+# create a empty list to store cross-validation errors
+cv_error = NULL
+# a loop to find the optimal alpha
+for (i in 1:length(alpha0)){
+  lasso0 = cv.glmnet(data.matrix(X_train), y_train,
+                     nfolds = 10, 
+                     alpha = alpha0[i], 
+                     family = "binomial"
+                     ,type.measure = "auc")
+  cv_error[i]=min(lasso0$cvm)
+}
+alpha0[which.max(cv_error)]
+```
+
+
+```{r}
+cvfit0= cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha = 0.6, type.measure="auc", keep=TRUE, nfold = 10)
+cvfit0$index
+plot(cvfit0)
 ```
 
 
