@@ -162,6 +162,7 @@ The target variable here is churn which explains whether the customer will churn
     + factor analysis
     + clustering
 * Prediction Models
+    + Subset for better modelling
     + Logistic Regression
     + KNN
     + Decision Tree
