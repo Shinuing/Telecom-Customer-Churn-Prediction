@@ -160,7 +160,12 @@ The target variable here is churn which explains whether the customer will churn
 * Factor Analysis and Clustering
     + numerical feature selection
     + factor analysis
-    + clustering
+* Clustering
+    + K-Means
+    + Mahalanobis distance K-Means
+    + Kernel K-Means
+    + Hierarchical Clustering
+    + EM Clustering
 * Prediction Models
     + Subset for better modelling
     + Logistic Regression
@@ -512,6 +517,45 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 
 #The most popular clusters (cluster 2) are remain the same 
 ```
+
+```{r Kernel K-Means}
+fit.ker = kkmeans(as.matrix(X), centers=3, kernel="rbfdot") 
+# Radial Basis kernel (Gaussian)
+object.ker = list(data = X, cluster = fit.ker@.Data)
+
+fviz_cluster(object.ker, geom = c("point"), ellipse=F,pointsize=1)
+adjustedRandIndex(fit$cluster, fit.ker$cluster)
+```
+```{r Hierarchical Clustering}
+d = dist(scale(X), method = "euclidean")
+hc = hclust(d, method = "average")
+
+hc$labels = names
+
+plot(hc)
+
+fviz_dend(x = hc, k = 3,color_labels_by_k = TRUE,cex = 0.8,
+          type = "phylogenic",repel = TRUE)+
+    theme(axis.text.x=element_blank(),axis.text.y=element_blank())
+
+groups.hc = cutree(hc, k = 3)
+
+fit.small = kmeans(X, centers=3, nstart=100)
+adjustedRandIndex(fit.small$cluster, groups.hc)
+```
+```{r EM Clustering}
+res.Mclust <- Mclust(scale(X))
+summary(res.Mclust)
+
+head(res.Mclust$classification)
+fviz_mclust(object = res.Mclust, what = "BIC", pallete = "jco") +
+    scale_x_discrete(limits = c(1:10))
+
+fviz_mclust(object = res.Mclust, what = "classification", geom = "point",  
+            pallete = "jco")
+adjustedRandIndex(fit$clusters, res.Mclust$classification)
+```
+
 
 #### Prediction Models
 
