@@ -1,0 +1,728 @@
+---
+title: "Telecom Customer Churn Prediction"
+author: "Xiaoying Yang, Bo Yang, Yin Tip Ho"
+date: "4/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem Statement
+需要陈述
+
+
+## Target
+
+Predict which characteristics of customers are most likely to lose and put forward suggestions for retaining users to the maximum extent according to the properties of losing customers.
+初稿
+
+## Data Description
+
+This data set consists of 100 variables and approximately 100 thousand records. 
+This data set contains different variables explaining the attributes of telecom industry and various factors considered important while dealing with customers of telecom industry. 
+The target variable here is churn which explains whether the customer will churn or not.
+
+#### Customer Usage Behavior  #1-48 需要添加col number，麻烦Bo Yang啦，把你的copy过来 
+
+* Price #1, 3, 6, 11
+* Calling #
+* Flow
+* Time 不太明白这个跟calling、flow的关系，只是说用的比较多吗
+
+#### Customer Atributes #50-99
+
+* Interaction with Telecom Operators
+* Family
+* Social Relations
+* Financial Assets
+* Facilities
+* Others
+
+#### Variable Description
+1 rev_Mean: Mean monthly revenue (charge amount)
+2 mou_Mean: Mean number of monthly minutes of use
+3 totmrc_Mean: Mean total monthly recurring charge
+4 da_Mean: Mean number of directory assisted calls
+5 ovrmou_Mean: Mean overage minutes of use
+6 ovrrev_Mean: Mean overage revenue
+7 vceovr_Mean: Mean revenue of voice overage
+8 datovr_Mean: Mean revenue of data overage
+9 roam_Mean: Mean number of roaming calls
+10 change_mou: Percentage change in monthly minutes of use vs previous three month average
+11 change_rev: Percentage change in monthly revenue vs previous three month average
+12 drop_vce_Mean: Mean number of dropped (failed) voice calls
+13 drop_dat_Mean: Mean number of dropped (failed) data calls
+14 blck_vce_Mean: Mean number of blocked (failed) voice calls
+15 blck_dat_Mean: Mean number of blocked (failed) data calls
+16 unan_vce_Mean: Mean number of unanswered voice calls
+17 unan_dat_Mean: Mean number of unanswered data calls
+18 plcd_vce_Mean: Mean number of attempted voice calls placed
+19 plcd_dat_Mean: Mean number of attempted data calls placed
+20 recv_vce_Mean: Mean number of received voice calls
+21 recv_sms_Mean: N
+22 comp_vce_Mean: Mean number of completed voice calls
+23 comp_dat_Mean: Mean number of completed data calls
+24 custcare_Mean: Mean number of customer care calls
+25 ccrndmou_Mean: Mean rounded minutes of use of customer care calls
+26 cc_mou_Mean: Mean unrounded minutes of use of customer care (see CUSTCARE_MEAN) calls
+27 inonemin_Mean: Mean number of inbound calls less than one minute
+28 threeway_Mean: Mean number of three way calls
+29 mou_cvce_Mean: Mean unrounded minutes of use of completed voice calls
+30 mou_cdat_Mean: Mean unrounded minutes of use of completed data calls
+31 mou_rvce_Mean: Mean unrounded minutes of use of received voice calls
+32 owylis_vce_Mean: Mean number of outbound wireless to wireless voice calls
+33 mouowylisv_Mean: Mean unrounded minutes of use of outbound wireless to wireless voice calls
+34 iwylis_vce_Mean: N
+35 mouiwylisv_Mean: Mean unrounded minutes of use of inbound wireless to wireless voice calls
+36 peak_vce_Mean: Mean number of inbound and outbound peak voice calls
+37 peak_dat_Mean: Mean number of peak data calls
+38 mou_peav_Mean: Mean unrounded minutes of use of peak voice calls
+39 mou_pead_Mean: Mean unrounded minutes of use of peak data calls
+40 opk_vce_Mean: Mean number of off-peak voice calls
+41 opk_dat_Mean: Mean number of off-peak data calls
+42 mou_opkv_Mean: Mean unrounded minutes of use of off-peak voice calls
+43 mou_opkd_Mean: Mean unrounded minutes of use of off-peak data calls
+44 drop_blk_Mean: Mean number of dropped or blocked calls
+45 attempt_Mean: Mean number of attempted calls
+46 complete_Mean: Mean number of completed calls
+47 callfwdv_Mean: Mean number of call forwarding calls
+48 callwait_Mean: Mean number of call waiting calls
+49 churn: Instance of churn between 31-60 days after observation date
+50 months: Total number of months in service
+51 uniqsubs: Number of unique subscribers in the household
+52 actvsubs: Number of active subscribers in household
+53 new_cell: New cell phone user
+54 crclscod: Credit class code
+55 asl_flag: Account spending limit
+56 totcalls: Total number of calls over the life of the customer
+57 totmou: Total minutes of use over the life of the cus
+58 totrev: Total revenue
+59 adjrev: Billing adjusted total revenue over the life of the customer
+60 adjmou: Billing adjusted total minutes of use over the life of the customer
+61 adjqty: Billing adjusted total number of calls over the life of the customer
+62 avgrev: Average monthly revenue over the life of the customer
+63 avgmou: Average monthly minutes of use over the life of the customer
+64 avgqty: Average monthly number of calls over the life of the customer
+65 avg3mou: Average monthly minutes of use over the previous three months
+66 avg3qty: Average monthly number of calls over the previous three months
+67 avg3rev: Average monthly revenue over the previous three months
+68 avg6mou: Average monthly minutes of use over the previous six months
+69 avg6qty: Average monthly number of calls over the previous six months
+70 avg6rev: Average monthly revenue over the previous six months
+71 prizm_social_one: Social group letter only
+72 area: Geogrpahic area
+73 dualband: Dualband
+74 refurb_new: Handset: refurbished or new
+75 hnd_price: Current handset price
+76 phones: Number of handsets issued
+77 models: Number of models issued
+78 hnd_webcap: Handset web capability
+79 truck: Truck indicator
+80 rv: RV indicator
+81 ownrent: Home owner/renter status
+82 lor: Length of residence
+83 dwlltype: Dwelling Unit type
+84 marital: Marital Status
+85 adults: Number of adults in household
+86 infobase: InfoBase match
+87 income: Estimated income
+88 numbcars: Known number of vehicles
+89 HHstatin: Premier household status indicator
+90 dwllsize: Dwelling size
+91 forgntvl: Foreign travel dummy variable
+92 ethnic: Ethnicity roll-up code
+93 kid0_2: Child 0 - 2 years of age in household
+94 kid3_5: Child 3 - 5 years of age in household
+95 kid6_10: Child 6 - 10 years of age in household
+96 kid11_15: Child 11 - 15 years of age in household
+97 kid16_17: Child 16 - 17 years of age in household
+98 creditcd: Credit card indicator
+99 eqpdays: Number of days (age) of current equipment
+100 Customer_ID: N
+
+## Project Guide 到时候做完再改动
+
+* Data Wrangling
+    + Missing Values 
+* Feature Engineering
+    + get dummies
+    + check correlation
+    + scaling 
+* Exploratory Data Analysis (EDA) 
+    + How much does customer spend on telecom monthly?
+    + 类似这种？看我们需不需要，就是比较麻烦，我只写了一个
+* Factor Analysis and Clustering
+* Regression Prediction
+    + 分出来training(60%), cross-validation(20%),testing(20%)
+
+## References
+https://www.kaggle.com/datasets/abhinav89/telecom-customer
+
+## CODE
+#### Data Wrangling
+
+* Import Data and load library
+建议把所有要用的library写在这啦，避免重复loading
+```{r Import Data and load library}
+    library(tidyverse)
+    library(zoo)
+    library(gtools)
+    library(naniar)
+    library(mice)
+    library(ggcorrplot)
+    library(rlang)
+    library(factoextra)
+    library(kernlab)
+    library(glmnet)
+    library(fastDummies)
+    library(kknn)
+    #raw_data <- read_csv("Telecom_customer churn.csv")
+```
+
+* Missing Values
+
+```{r Check missing values by column}
+#check missing values by columns
+raw_data %>% miss_var_summary()
+
+#Remove the columns with more than 10% missing values 
+telecom <- raw_data %>%
+    select(-c(numbcars, HHstatin, dwllsize, ownrent, dwlltype, lor,income, 
+              adults, infobase, hnd_webcap)) %>%
+    select(-prizm_social_one)  #remove unrelated col with high missing rate
+
+telecom1 <- telecom
+var_miss <- which(colMeans(is.na(telecom1))!= 0)
+var_miss
+# 33 variables still have missing value.
+
+# Numeric type var
+nr_mice <- select_if(telecom1, negate(is.numeric))
+r_mice <- select_if(telecom1, is.numeric)
+na_mice <- r_mice[, c(69, 70, 74)]
+r_mice <- r_mice[, -c(69, 70, 74)]
+
+# Imputation by rf
+impute <- mice(r_mice, method = "rf", ntree = 50, m = 1, maxit = 1)
+telecom_complete <- complete(impute)
+any(is.na(telecom_complete))
+# Add non-numeric type var back to the data set
+telecom1 <- cbind(telecom_complete, na_mice, nr_mice)
+sum(is.na(telecom1))
+var_miss1 <- which(colMeans(is.na(telecom1))!= 0)
+var_miss1
+# Row missing value
+row_miss <- which(rowMeans(is.na(telecom1)) != 0)
+length(row_miss)
+
+telecom1 <- telecom1[-row_miss, ]
+
+save(telecom1, file = "telecom_Comsumer_Info.RData")
+```
+
+
+#### Feature Engineering
+
+Transform some numeric variables into factors because they are only 0 or 1.
+Create a separate data set without the churn variable (variable to predict) that will be the one we work on.
+Enumerate the rows of the data set with the Customers ID so we can identify each.
+Remove unnecessary variables with a correlation matrix, and remove some that are also not important.
+
+参考 https://www.kaggle.com/code/clustercode12/telecom-churn-analysis-with-r/notebook
+
+```{r}
+# Function to transform variables
+REMOVE = "remove"
+TO_FACTOR = "tofactor"
+
+editCol <- function(colNames, df, todo) {
+  for(col in colNames) {
+    index <- which(names(df) == col)
+    if(!is_empty(index)) {
+      if(todo == REMOVE) {
+        df <- df[, -index]
+      } else if(todo == TO_FACTOR) {
+        df[, index]  <- as.factor(df[, index])
+      } else {errorCondition("Not performing well")}
+    }
+  }
+  return(df)
+}
+
+# Perform the function
+telecom1 <- editCol(c("forgntv1", "truck", "rv"), telecom1, TO_FACTOR)
+telecom1 <- droplevels.data.frame(telecom1)
+row.names(telecom1) <- telecom1$Customer_ID
+telecom_customer <- telecom1
+telecom1 <- editCol(c("churn", "Customer_ID"), telecom1, REMOVE)
+
+rm(list = setdiff(ls(), c("telecom1", "telecom_customer")))
+
+# Correlation matrix
+r_mice <- select_if(telecom1, is.numeric)
+Corr <- cor(r_mice)
+Corr[upper.tri(Corr)] = 0
+ggcorrplot(corr = Corr, method = "square", lab = FALSE)
+# correlation heat-map
+col<- colorRampPalette(c("blue", "white", "red"))(20)
+heatmap(x = Corr, col = col, symm = TRUE)
+
+  # Need to eliminate strong correlated variables
+diag(Corr) = 0
+ 
+telecom_num_no_corr <-  r_mice[, !apply(Corr, 2, function(x) any(abs(x) > 0.9, na.rm = TRUE))]
+# How many variables are eliminated
+dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
+```
+
+
+```{r}
+ #hist
+    par(mfrow = c(3,4))
+    for (i in 1:ncol(telecom_num_no_corr)){
+        hist(telecom_num_no_corr[,i],
+             breaks = 30,
+             main = "",ylab = "",
+             xlab = names(telecom_num_no_corr)[i],
+             cex.axis=0.5,
+             cex.lab = 0.6)
+    }
+    
+    #scaling and his again
+    telecom_num_scale = as.data.frame(scale(telecom_num_no_corr))
+     par(mfrow = c(3,4))
+    for (i in 1:ncol(telecom_num_scale)){
+        hist(telecom_num_scale[,i],
+             breaks = 30,
+             main = "",ylab = "",
+             xlab = names(telecom_num_no_corr)[i],
+             cex.axis=0.5,
+             cex.lab = 0.6)
+    }
+
+    save(telecom_num_scale, file = "telecom_num_scale.RData")
+```
+
+
+#### PCA
+Principle Components Analysis
+
+```{r}
+pca_tele <- prcomp(telecom_num_scale)
+# pca_tele #发现太长了就用summary
+summary(pca_tele)
+var_expalained <- pca_tele$sdev^2/sum(pca_tele$sdev^2)
+
+# Scree plot
+fviz_screeplot(pca_tele, addlabels = TRUE) # Scree plot
+qplot(c(1:49), var_expalained) + geom_line() + xlab("Principal Component") + ylab("Variance Explained") + ggtitle("Scree Plot") + ylim(0, 1)
+print(var_expalained)
+
+# Visualize contributions of pca in different dimensions
+fviz_contrib(pca_tele,choice = "var", axes = 1)
+fviz_contrib(pca_tele,choice = "var", axes = 2)
+fviz_contrib(pca_tele,choice = "var", axes = 3)
+
+# MCA for individual
+fviz_contrib(pca_tele, choice = "ind", axes = 2, top = 100)# Difference between customers
+
+# PCA RADOR PLOT
+fviz_pca_var(pca_tele, col.var = "contrib")
+
+# PCA biplot
+fviz_pca_biplot(pca_tele, repel = TRUE)
+
+# Customers on 1st and 2nd components
+fviz_pca_ind(pca_tele,
+             label = "none", # hide individual labels
+             habillage = telecom_complete$churn, # color by groups
+             palette = c("#00AFBB", "#E7B800"))
+#ggg
+#testing function:  pls no error
+```
+
+#### Factor Analysis
+
+```{r}
+colsImportant = c()
+
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 1], decreasing = TRUE)[1:21]))
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 2], decreasing = TRUE)[1:8]))
+colsImportant = c(colsImportant, 
+                  names(sort(pca_tele$rotation[, 1], decreasing = TRUE)[1:5]))
+
+colsImportant = unique(colsImportant)
+```
+```
+As the variables are too big for the factor analysis, we will reduce it. 
+We use PCA with the most important variables of the PCs to reduce it. 
+We use the ones that are high enough, given by the graphs above.
+```
+```{r}
+#remove the not so important variables and then do factor analysis
+tele_num_scale_imp = telecom_num_scale %>%
+    select(c(colsImportant))
+save(tele_num_scale_imp, file = "tele_num_scale_imp.RData")
+
+
+x.f = factanal(tele_num_scale_imp, factors = 5,
+               rotation="none", scores="regression")
+
+factor = cbind(x.f$loadings, x.f$uniquenesses)
+#factor
+
+#graph each factor 
+par(mfrow=c(3,1))
+barplot(x.f$loadings[,1], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,2], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,3], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,4], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,5], las=2, col="darkblue", ylim = c(-1, 1))
+
+```
+```
+In the graph, at first sight we can discard the 4, 5 factors as they are not pretty
+much meaningful in any manner. 
+Also the factor 3 does not look like anything that important.
+
+However, factors 1 and 2 show really interesting inverse correlations. 
+They differ on the exact variables and show that the characteristics of the two type
+of customers are opposite. They are the contrary, this could mean that ones are the
+ones with churn = 1 (left the company) and the others the ones that stay. 
+Also, looking at the data and the variables, the first factor can be the customers
+that remain in the company, and the second factor the ones that leave the company.
+
+This means that the first factors can contribute to the churn variable to be
+negative, and the opposite for the second factor.
+```
+
+```{r}
+#check 1 and 2 factors again
+par(mfrow=c(2,1))
+barplot(x.f$loadings[,1], names=F, las=2, col="darkblue", ylim = c(-1, 1))
+barplot(x.f$loadings[,2], las=2, col="darkblue", ylim = c(-1, 1))
+
+# clean the environment.
+rm(list = c("colsImportant")) 
+```
+
+####Clustering
+
+```{r}
+nFolds = 6
+folds = sample(rep(1:nFolds, length.out = nrow(tele_num_scale_imp)))
+
+for (i in 1:nFolds) {
+    X = as.data.frame(tele_num_scale_imp)[which(folds == i), ]
+
+    print(fviz_nbclust(X, kmeans, method = 'silhouette'))
+}
+```
+
+Here, the graph indicates that mostly 3 clusters is the base clustering that we can make. 
+And finally we will use a simple boostrapping to really know the best. However, as
+boostrapping is really computationally expensive, we will do it for just one fold.
+
+```{r}
+X = as.data.frame(tele_num_scale_imp)[which(folds == 1), ]
+
+fviz_nbclust(X, kmeans, method = 'gap_stat', k.max = 8)
+```
+```{r Kmeans}
+X = as.data.frame(scale(tele_num_scale_imp))
+
+#Considering three clusters
+fit = kmeans(X, centers=3, nstart=100)
+groups = fit$cluster
+
+#Now, we will graph the number of ocurrencies for each group.
+barplot(table(groups), col="#69b3a2")
+
+#Here we see that there is a group with most of the customers, and other not so big. However, the second group is almost ineligible.  The hypothesis could be as the one we had before. One group can correspond to customers that left the company and other to the ones that remain. First, we will develop this cluster further, and then let's see if we can get the same hypothesis with other clustering methods.
+
+centers = fit$centers
+
+for (i in 1:3) {
+    bar1=barplot(centers[i,], las=2, col="darkblue", ylim=c(-2,100),
+                 main=paste("Cluster", i,
+                            ": Group center in blue, global center in red"))
+    print(points(bar1,y=apply(X, 2, quantile, 0.50),col="red",pch=19))
+}
+
+#Here, we can clearly see that the group with less values, is like a mix cluster.  The third cluster has much more higher values that other cluster, and this can mean that the customers from the third group are more radical and therefore have more probabilty to leave the company.
+
+#ploting the cluster
+fviz_cluster(fit, data = X, 
+             geom = c("point"),
+             ellipse.type = 'norm', 
+             pointsize=1)+
+    scale_fill_brewer(palette="Paired") +
+    theme(panel.grid = element_blank(),
+          panel.background = element_blank())
+
+#Here we can see some minor differences and see that the most populated cluster (cluster 3) is at the left foremost part, followed by the first cluster and finally the second. This shows that number 2 are the most extreme customers and 1 the most common.    
+```
+```{r Mahalanobis distance K-Means}
+S_x = cov(X)
+iS = solve(S_x)
+e = eigen(iS)
+V = e$vectors
+B = V %*% diag(sqrt(e$values)) %*% t(V)
+Xtil = scale(X,scale = FALSE)
+X_maha = as.data.frame(Xtil %*% B)
+
+options(warn = -1)
+fit.mahalanobis = kmeans(X_maha, centers=3, nstart=100)
+groups = fit.mahalanobis$cluster
+centers=fit.mahalanobis$centers
+colnames(centers)=colnames(X)
+#centers
+barplot(table(groups), col="#69b3a2")
+
+for (i in 1:3) {
+    bar1=barplot(centers[i,], las=2, col="darkblue", ylim=c(-2,2), main=paste("Cluster", i,": Group center in blue, global center in red"))
+    points(bar1,y=apply(X, 2, quantile, 0.50),col="red",pch=19)
+}
+
+#Not really the same. It is a little bit weird because the cluster that did not matter has a lot of outlier variables , whereas the most populated cluster (cluster 3) is almost 0. 
+
+fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
+             ellipse.type = 'norm', pointsize=1)+
+    scale_fill_brewer(palette="Paired")+
+    theme(panel.grid = element_blank(),
+          panel.background = element_blank())
+
+#The most popular clusters (cluster 2) are remain the same 
+```
+
+####Categorical Variables
+
+
+```{r cateorical variables}
+#subset and get dummies
+tele_cate = select_if(telecom1, is.character)
+tele_cate = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
+tele_cate = tele_cate[,-c(1:14)]
+
+df = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
+df = df %>% rename(churn = `telecom1$churn`)
+
+#-------Subset--------
+set.seed(157)
+sub <- sample(98227, 4000, replace = F)
+df.sub <- df[sub, ]
+train <- sample(4000, 2800, replace = F)
+df.sub_train <- df.sub[train, ]
+df.sub_test <- df.sub[-train, ]
+
+X_train = df.sub_train[,-147]
+y_train = df.sub_train[,147]
+X_test = df.sub_test[,-147]
+y_test = df.sub_test[,147]
+save(df.sub, file = "Subsample.RData")
+
+#-------Subset---------
+#Split
+set.seed(157)
+train <- sample(nrow(df), 0.7*nrow(df))
+df.train <- df[train,]
+df.test <- df[-train,]
+
+X_train = df.train[,-147]
+y_train = df.train[,147]
+X_test = df.test[,-147]
+y_test = df.test[,147]
+
+#remove large data
+#rm(tele_cate, tele_num_scale_imp, telecom_num_scale, telecom1)
+```
+
+```{r prediction models}
+# Logistic regression
+#10-fold cv
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = as.factor(y_train), alpha = 0.5,
+                     nfold = 10, family = binomial)
+pre1 <- predict(loglik.fit, as.matrix(X_test), type = "response")
+pre11 <- round(pre1, 0) 
+table(pre11, y_test)
+mean(pre11 == y_test) 
+
+# RandomForest model, 
+# 
+tuneGrid = expand.grid(mtry = c(15:20))
+trControl = trainControl(method = "cv", number = 5)
+
+rf_mtry = train(as.factor(churn)~., data = df.sub_train, method = "rf", metric = "Accuracy", tuneGrid = tuneGrid, trControl = trControl,
+             num.trees = 100,
+             respect.unordered.factors = "partition")
+pre2 <- predict(rf_mtry, X_test)
+table(pre2, y_test)
+mean(pre2 == y_test)
+
+#SVM model--------------失败了
+cost.grid = expand.grid(cost = seq(0.01, 2, length = 20))
+train_control = trainControl(method="repeatedcv", number=10, repeats=3)
+  
+svm2 <- train(as.factor(df.sub$churn) ~ ., data = df.sub_train, method = "svmLinear2", 
+                trControl = train_control,  
+                tuneGrid = cost.grid)
+
+# KNN model
+y <- y_train
+x <- X_train
+set.seed(157)    
+control <- trainControl(method = "cv", number = 10)
+knn.cvfit <- train(y ~ ., method = "knn", 
+                    data = data.frame("x" = x, "y" = as.factor(y)),
+                    tuneGrid = data.frame(k = seq(1, 30, 1)),
+                    trControl = control)
+plot(knn.cvfit$results$k, 1-knn.cvfit$results$Accuracy,
+       xlab = "K", ylab = "Classification Error", type = "b",
+       pch = 19, col = "darkorange")
+#k = 15 is the best
+knn.fit = kknn(y ~ ., train = data.frame(x = x, y = as.factor(y)), 
+               test = data.frame(x = X_test),
+               k = 15, kernel = "rectangular")
+test.pred = knn.fit$fitted.values
+mean(test.pred == y_test)
+
+# Decision treee model 
+
+
+留这块我补代码-------
+```
+
+
+
+```{r logistic regression}
+table(y_train)
+
+#logistix.fit <- glm(churn ~., data = df.train, family = binomial)
+#predict(logistic.fit, newdata = df.test, type = "response)
+
+
+#assume 10-fold cv
+loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
+                     nfold = 5, family = binomial)
+
+```
+
+
+
+
+```{r rf}
+library(randomForest)
+library(caret)
+rm(list = setdiff(ls(), "df"))
+
+rf.fit <- randomForest(X_train, as.factor(y_train), ntree = 100, mtry = 15, nodesize = 8, 
+                       sampsize = 60000)
+
+
+
+
+tuneGrid = expand.grid(mtry = c(15:24))
+trControl = trainControl(method = "cv", number = 8)
+
+rf_mtry = train(as.factor(churn)~., data = df, method = "rf", metric = "Accuracy", tuneGrid = tuneGrid, trControl = trControl,
+             num.trees = 100,
+             respect.unordered.factors = "partition")
+best.mtry = rf_mtry$bestTurn$mtry
+
+store.maxnode = list()
+TurneGrid = expand.grid(.mtry = best.mtry)
+for (maxnodes in 2:20){
+  set.seed(1)
+  rf_maxnode = train(as.factor(churn)~., data=df1, method = "rf", metric = "Accuracy", tuneGrid = TuneGrid, trControl = trControl,
+             ntrees = 300,
+             maxnodes = 10 )
+  current_iteration <- toString(nodeize)
+  store.maxnode[[current_iteration]] <- rf_nodeszie
+}
+results.nodesize <- resample(store.maxnode)
+summary(results.nodesize)
+
+store.tree<-list()
+for (ntree  in seq(100:1000, 150)){
+  set.seed(1)
+  rf_maxtree = train(as.factor(churn)~., data=df1, method = "rf", metric = "Accuracy", tuneGrid = TuneGrid, trControl = trControl,
+             maxnodes = 10,
+             ntree = ntree )
+  key <- toString(ntree)
+  store.tree[[key]]<-rf_maxtree
+}
+result_tree <- resamples(store.tree)
+summary(result_tree)
+
+
+rf.fit <- train(as.factor(churn)~., data=df1, method = "rf", metric = "Accuracy", tuneGrid = TuneGrid, trControl = trControl,
+             ntrees = 300, nodesize = 2, maxnodes = 5 )
+varImp(rf.fit)
+```
+
+
+
+```{r svm}
+library(caret)
+library(e1071)
+  cost.grid = expand.grid(cost = seq(0.01, 2, length = 20))
+  train_control = trainControl(method="repeatedcv", number=10, repeats=3)
+  
+  svm2 <- train(as.factor(Y) ~ X, data = df1, method = "svmLinear2", 
+                trControl = train_control,  
+                tuneGrid = cost.grid)
+```
+
+
+```{r}
+library(glmnet)
+# Elastic Net
+
+cvfit = cv.glmnet(as.matrix(X), Y, family = "binomial", alpha=0.4, type.measure = "class")
+
+cvfit = cv.glmnet(X, as.factor(Y), family = "binomial", alpha=0.4, type.measure = "class")
+
+plot(cvfit)
+cmat = confusion.glmnet(cvfit, newx = xtrain, newy = ytrain)
+cmat
+```
+
+
+
+```{r}
+library(glmnet)
+# Random Spliting
+fit <- glmnet(xtrain, ytrain, family="binomial", nlambda=6)
+result <- assess.glmnet(fit1, newx=xtrain, newy=ytrain)
+```
+
+
+```{r}
+library(glmnet)
+cvfit1 = cv.glmnet(xtrain, ytrain, family = "binomial", alpha=0.4,
+                    nlambda = 5, type.measure="auc", keep=TRUE)
+rocs = roc.glmnet(cvfit1$fit.preval, newy = df0$churn)
+rocs
+cvresults1 = assess.glmnet(cvfit1, newx = xtrain, newy = ytrain,
+                           s = "lambda.1se")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
