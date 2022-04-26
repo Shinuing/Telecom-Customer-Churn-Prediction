@@ -191,6 +191,9 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(fastDummies)
     library(caret)
     library(class)
+    library(e1071)
+    library(randomForest)
+    library(glmnet)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -542,7 +545,6 @@ rm(df)
 ###### Logistic Regression
 
 ```{r en}
-library(glmnet)
 # Elastic Net
 cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class")
 plot(cvfit)
@@ -554,7 +556,6 @@ cmat
 
 ```{r roc}
 #ROC
-library(glmnet)
 cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 26, type.measure="auc", keep=TRUE)
 cvfit1$index
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
@@ -590,8 +591,6 @@ loglik.fit <- cv.glmnet(x = as.matrix(X_train), y = y_train, alpha = 0.5,
 
 ###### Random Forest
 ```{r rf}
-library(randomForest)
-library(caret)
 tuneGrid = expand.grid(.mtry = c(1:20))
 trControl = trainControl(method = "cv", number = 10)
 
@@ -633,8 +632,6 @@ varImp(rf.fit)
 
 ###### SVM
 ```{r svm}
-library(caret)
-library(e1071)
   cost.grid = expand.grid(cost = seq(0.01, 2, length = 20))
   train_control = trainControl(method="repeatedcv", number=10, repeats=3)
   
@@ -652,17 +649,8 @@ library(e1071)
 
 #knn.fit <- knn(df.train, df.test, y_train, k = sqrt(length(train))
 
-pred_knn <- knn(churn ~ .,df.train,df.test,k=15)
+#pred_knn <- knn(churn ~ .,df.train,df.test,k=15)
 ```
-
-
-
-
-
-
-
-
-
 
 
 
