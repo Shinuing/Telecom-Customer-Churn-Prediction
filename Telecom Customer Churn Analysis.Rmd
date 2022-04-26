@@ -517,15 +517,20 @@ fviz_cluster(fit.mahalanobis, data = X, geom = c("point"),
 
 * Get Dummies and Split training and testing dataset
 ```{r cateorical variables}
-#subset and get dummies
+#subset
 tele_cate = select_if(telecom1, is.character)
-tele_cate = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
-tele_cate = tele_cate[,-c(1:14)]
+df1 = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
+df1 = df1 %>% rename(churn = `telecom1$churn`)
+save(df1, file = "Categotical Selection.RData")
 
-df = as.data.frame(cbind(tele_num_scale_imp, tele_cate, telecom1$churn))
+#get dummies
+tele_cate1 = dummy_cols(tele_cate, select_columns = c("new_cell", "crclscod", "asl_flag", "area", "dualband", "refurb_new", "marital", "ethnic", "kid0_2", "kid3_5", "kid6_10", "kid11_15", "kid16_17", "creditcd" ))
+tele_cate1 = tele_cate1[,-c(1:14)]
+
+df = as.data.frame(cbind(tele_num_scale_imp, tele_cate1, telecom1$churn))
 df = df %>% rename(churn = `telecom1$churn`)
 
-save(df, file = "Predction Data.RData")
+save(df, file = "Prediction Data.RData")
 
 #split
 set.seed(157)
