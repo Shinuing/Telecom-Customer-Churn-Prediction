@@ -590,6 +590,12 @@ library(e1071)
 ```
 
 
+```{r}
+fit0 = glm(churn~., family = binomial, data = df.sub)
+```
+
+
+
 ```{r logistic regression}
 table(y_train)
 
@@ -632,34 +638,12 @@ par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
 invisible(sapply(rocs, lines, col="orange"))
 lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 
-
+confusion.glmnet(cvfit1, newx = data.matrix(X_test), newy = y_test)
 ```
 
 
-```{r}
-library(glmnet)
-# set alpha's domain 
-alpha0 = seq(0, 1, 0.2)
-# create a empty list to store cross-validation errors
-cv_error = NULL
-# a loop to find the optimal alpha
-for (i in 1:length(alpha0)){
-  lasso0 = cv.glmnet(data.matrix(X_train), y_train,
-                     nfolds = 10, 
-                     alpha = alpha0[i], 
-                     family = "binomial"
-                     ,type.measure = "auc")
-  cv_error[i]=min(lasso0$cvm)
-}
-alpha0[which.max(cv_error)]
-```
 
 
-```{r}
-cvfit0= cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha = 0.6, type.measure="auc", keep=TRUE, nfold = 10)
-cvfit0$index
-plot(cvfit0)
-```
 
 
 
