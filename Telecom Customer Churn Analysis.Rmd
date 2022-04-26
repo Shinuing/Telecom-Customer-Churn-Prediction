@@ -581,9 +581,11 @@ spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
 data.frame(sens, spec)
 ```
 
+
+
 ```{r logistic regression}
 table(y_train)
-
+# 可以删除！！！！！！！
 #logistix.fit <- glm(churn ~., data = df.train, family = binomial)
 #predict(logistic.fit, newdata = df.test, type = "response)
 
