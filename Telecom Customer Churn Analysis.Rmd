@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(eval=FALSE)
 ```
 
 ## Problem Statement
@@ -373,7 +373,7 @@ colsImportant = c(colsImportant,
 colsImportant = c(colsImportant, 
                   names(sort(pca_tele$rotation[, 2], decreasing = TRUE)[1:8]))
 colsImportant = c(colsImportant, 
-                  names(sort(pca_tele$rotation[, 1], decreasing = TRUE)[1:5]))
+                  names(sort(pca_tele$rotation[, 3], decreasing = TRUE)[1:5]))
 
 colsImportant = unique(colsImportant)
 ```
@@ -698,5 +698,15 @@ varImp(rf.fit)
 
 
 
+###### supervised learning model selection
+```{r}
+df2 = as.data.frame(cbind(telecom_num_scale, tele_cate, telecom1$churn))
+df2 = df2 %>% rename(churn = `telecom1$churn`)
+
+#subset rows 
+set.seed(157)
+df3 = df2[sample(nrow(df2), 5000), ]
+save(df3, file = "Model Selection.RData")
+```
 
 
