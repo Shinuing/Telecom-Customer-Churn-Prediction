@@ -710,3 +710,10 @@ save(df3, file = "Model Selection.RData")
 ```
 
 
+```{r backward}
+add.mod = glm(churn~., family = binomial, data = df3)
+back = step(add.mod, direction = "backward", trace = FALSE)
+summary(back)
+```
+
+
