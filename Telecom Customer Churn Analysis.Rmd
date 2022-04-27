@@ -199,7 +199,7 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(e1071)
     library(randomForest)
     library(glmnet)
-    library(party)
+    library(partykit)
     raw_data <- read_csv("Telecom_customer churn.csv")
 ```
 
@@ -685,7 +685,7 @@ confusion.glmnet(cvfit1, newx = data.matrix(X_test), newy = y_test)
 
 ###### Decision Tree
 ```{r decision tree}
-df.fit <- ctree(as.factor(df.sub_train$churn) ~ ., data = df.sub_train)
+df.fit <- ctree(as.factor(churn) ~ ., data = df.train)
 pre5 <- predict(df.fit, X_test)
 mean(pre5 == y_test)
 ```
