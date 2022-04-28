@@ -199,7 +199,7 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(e1071)
     library(randomForest)
     library(glmnet)
-    library(party)
+    library(partykit)
     raw_data <- read_csv("Telecom_customer churn.csv")
 
 
@@ -598,6 +598,47 @@ y_test = df.test[,147]
 rm(df)
 ```
 
+
+###### supervised learning model selection
+```{r}
+df2 = as.data.frame(cbind(telecom_num_scale, tele_cate, telecom1$churn))
+df2 = df2 %>% rename(churn = `telecom1$churn`)
+
+#subset rows 
+set.seed(157)
+df3 = df2[sample(nrow(df2), 5000), ]
+save(df3, file = "Model Selection.RData")
+```
+
+
+
+```{r backward}
+add.mod = glm(churn~., family = binomial, data = df3)
+back = step(add.mod, direction = "backward", trace = FALSE)
+summary(back)
+```
+
+
+
+```{r}
+p = c("churn","totmrc_Mean","vceovr_Mean","change_mou","change_rev","drop_vce_Mean","drop_dat_Mean","blck_vce_Mean","drop_dat_Mean","threeway_Mean","mou_cvce_Mean","mou_rvce_Mean","owylis_vce_Mean","mou_opkv_Mean","drop_blk_Mean","months","uniqsubs","actvsubs","avgrev","hnd_price","phones","eqpdays","asl_flag","area","refurb_new","ethnic")
+selected.vars = df3[,p]
+```
+
+
+```{r}
+#split
+set.seed(157)
+train <- sample(nrow(selected.vars), 0.7*nrow(selected.vars))
+df.train <- selected.vars[train,]
+df.test <- selected.vars[-train,]
+
+X_train = select(df.train,-c("churn"))
+y_train = df.train[,c("churn")]
+X_test = select(df.test,-c("churn"))
+y_test = df.test[,c("churn")]
+```
+
 ###### Logistic Regression
 
 ```{r en}
@@ -608,33 +649,49 @@ cvfit$index
 coef(cvfit, s=cvfit$lambda.min)
 cmat = confusion.glmnet(cvfit, newx = data.matrix(X_test), newy = y_test)
 cmat
+
+bestbeta = coef(lasso.fit, s = "lambda.min")
+  
+  # number of nonzero parameters
+  sum(as.numeric(bestbeta)!=0)
+   # the list of nonzero parameters
+  selected = data.frame("gene names" = rownames(bestbeta), 
+                        "beta" = as.numeric(bestbeta))[as.numeric(bestbeta)!=0, ]
+  
+  # sort
+  selected[order(abs(selected$beta), decreasing = TRUE), ]
 ```
+
+
+```{r class}
+#Classification
+ypred = 1*(predict(cvfit, newx= data.matrix(X_test),
+                   s="lambda.min", type="response")>0.5)
+cmat2 = table(ypred, ytrue=y_test)
+cmat2
+sens = cmat2["1","1"]/(cmat2["0","1"]+cmat2["1","1"])
+spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
+data.frame(sens, spec)
+```
+
 
 ```{r roc}
 #ROC
-cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 26, type.measure="auc", keep=TRUE)
+cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 24, type.measure="auc", keep=TRUE)
 cvfit1$index
+plot(cvfit1)
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
 best = cvfit1$index["min",]
 par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
 invisible(sapply(rocs, lines, col="orange"))
 lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
-```
 
-```{r auc}
-#AUC
-ypred = 1*(predict(cvfit, newx= data.matrix(X_test),
-                   s="lambda.min", type="response")>0.5)
-cmat2 = table(ypred, ytrue=y_test)
-cmat2
-sens = cmat2["1","1"]/(cmat2["s0","1"]+cmat2["1","1"])
-spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
-data.frame(sens, spec)
+confusion.glmnet(cvfit1, newx = data.matrix(X_test), newy = y_test)
 ```
 
 ###### Decision Tree
 ```{r decision tree}
-df.fit <- ctree(as.factor(df.sub_train$churn) ~ ., data = df.sub_train)
+df.fit <- ctree(as.factor(churn) ~ ., data = df.train)
 pre5 <- predict(df.fit, X_test)
 mean(pre5 == y_test)
 ```
@@ -704,22 +761,5 @@ varImp(rf.fit)
 
 
 
-###### supervised learning model selection
-```{r}
-df2 = as.data.frame(cbind(telecom_num_scale, tele_cate, telecom1$churn))
-df2 = df2 %>% rename(churn = `telecom1$churn`)
-
-#subset rows 
-set.seed(157)
-df3 = df2[sample(nrow(df2), 5000), ]
-save(df3, file = "Model Selection.RData")
-```
-
-
-```{r backward}
-add.mod = glm(churn~., family = binomial, data = df3)
-back = step(add.mod, direction = "backward", trace = FALSE)
-summary(back)
-```
 
 
