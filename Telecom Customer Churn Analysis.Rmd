@@ -283,11 +283,14 @@ rm(list = setdiff(ls(), c("telecom1", "telecom_customer")))
 # Correlation matrix
 r_mice <- select_if(telecom1, is.numeric)
 Corr <- cor(r_mice)
-Corr[upper.tri(Corr)] = 0
-ggcorrplot(corr = Corr, method = "square", lab = FALSE)
-# correlation heat-map
-col<- colorRampPalette(c("blue", "white", "red"))(20)
-heatmap(x = Corr, col = col, symm = TRUE)
+#Corr[upper.tri(Corr)] = 0
+
+ggcorrplot(corr = Corr, method = "square", type = "lower")
+#
+library("PerformanceAnalytics")
+chart.Correlation(r_mice, histogram=TRUE, pch=19)
+
+
 
   # Need to eliminate strong correlated variables
 diag(Corr) = 0
@@ -608,8 +611,48 @@ save(df3, file = "Model Selection.RData")
 
 ```{r backward}
 add.mod = glm(churn~., family = binomial, data = df3)
-back = step(add.mod, direction = "backward", trace = FALSE)
+back = step(add.mod, direction = "backward", trace = FALSE, scope = list(~ totmrc_Mean * vceovr_Mean * change_mou *
+    change_rev * drop_vce_Mean * drop_dat_Mean * blck_vce_Mean * 
+    blck_dat_Mean * threeway_Mean * mou_cvce_Mean * mou_rvce_Mean * 
+    owylis_vce_Mean * mou_opkv_Mean * drop_blk_Mean * months * 
+    uniqsubs * actvsubs * avgrev * hnd_price * phones * eqpdays * 
+    asl_flag * area * refurb_new * ethnic))
 summary(back)
+```
+
+
+```{r}
+fit1 = glm(as.factor(churn) ~ totmrc_Mean + vceovr_Mean + change_mou + 
+    change_rev + drop_vce_Mean + drop_dat_Mean + blck_vce_Mean + 
+    blck_dat_Mean + threeway_Mean + mou_cvce_Mean + mou_rvce_Mean + 
+    owylis_vce_Mean + mou_opkv_Mean + drop_blk_Mean + months + 
+    uniqsubs + actvsubs + avgrev + hnd_price + phones + eqpdays + 
+    asl_flag + area + refurb_new + ethnic,
+    family = binomial, data = df3)
+
+coeffs <- coefficients(fit1)
+#coeffsord <- coeffs[order(coeffs, decreasing = TRUE)]
+barplot(coeffsord, las=2)
+
+#par(mfrow=c(2,2))
+plot(cooks.distance(fit1), type="h")
+sort(cooks.distance(fit1), decreasing = TRUE)[1:5]
+```
+
+
+```{r}
+df4 = df3[-1094310,]
+
+fit2 = glm(churn ~ totmrc_Mean + vceovr_Mean + change_mou + 
+    change_rev + drop_vce_Mean + drop_dat_Mean + blck_vce_Mean + 
+    blck_dat_Mean + threeway_Mean + mou_cvce_Mean + mou_rvce_Mean + 
+    owylis_vce_Mean + mou_opkv_Mean + drop_blk_Mean + months + 
+    uniqsubs + actvsubs + avgrev + hnd_price + phones + eqpdays + 
+    asl_flag + area + refurb_new + ethnic,
+    family = binomial, data = df4)
+par(mfrow=c(2,2))
+plot(cooks.distance(fit2), type="h")
+sort(cooks.distance(fit2), decreasing = TRUE)[1:5]
 ```
 
 
@@ -617,6 +660,8 @@ summary(back)
 ```{r}
 p = c("churn","totmrc_Mean","vceovr_Mean","change_mou","change_rev","drop_vce_Mean","drop_dat_Mean","blck_vce_Mean","drop_dat_Mean","threeway_Mean","mou_cvce_Mean","mou_rvce_Mean","owylis_vce_Mean","mou_opkv_Mean","drop_blk_Mean","months","uniqsubs","actvsubs","avgrev","hnd_price","phones","eqpdays","asl_flag","area","refurb_new","ethnic")
 selected.vars = df3[,p]
+c = cor(selected.vars[,-c(1,23:26)])
+corrplot(c)
 ```
 
 
@@ -644,7 +689,7 @@ coef(cvfit, s=cvfit$lambda.min)
 cmat = confusion.glmnet(cvfit, newx = data.matrix(X_test), newy = y_test)
 cmat
 
-bestbeta = coef(lasso.fit, s = "lambda.min")
+bestbeta = coef(cvfit, s = "lambda.min")
   
   # number of nonzero parameters
   sum(as.numeric(bestbeta)!=0)
@@ -653,7 +698,8 @@ bestbeta = coef(lasso.fit, s = "lambda.min")
                         "beta" = as.numeric(bestbeta))[as.numeric(bestbeta)!=0, ]
   
   # sort
-  selected[order(abs(selected$beta), decreasing = TRUE), ]
+  coef = selected[order(selected$beta, decreasing = TRUE), ]
+barplot(coef$beta, names = coef$gene.names, las=2)
 ```
 
 
@@ -666,6 +712,7 @@ cmat2
 sens = cmat2["1","1"]/(cmat2["0","1"]+cmat2["1","1"])
 spec = cmat2["0","0"]/(cmat2["0","0"]+cmat2["1","0"])
 data.frame(sens, spec)
+
 ```
 
 
@@ -676,12 +723,46 @@ cvfit1$index
 plot(cvfit1)
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
 best = cvfit1$index["min",]
-par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
+par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l", main = "ROC")
 invisible(sapply(rocs, lines, col="orange"))
 lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 
 confusion.glmnet(cvfit1, newx = data.matrix(X_test), newy = y_test)
+
+bestbeta = coef(cvfit1, s = "lambda.min")
+  
+  # number of nonzero parameters
+  sum(as.numeric(bestbeta)!=0)
+   # the list of nonzero parameters
+  selected = data.frame("gene names" = rownames(bestbeta), 
+                        "beta" = as.numeric(bestbeta))[as.numeric(bestbeta)!=0, ]
+  
+  # sort
+  coef = selected[order(selected$beta, decreasing = TRUE), ]
+barplot(coef$beta, names = coef$gene.names, las=2, main = "Coefficients")
 ```
+
+
+```{r}
+  library(ROCR)
+pred1 = predict(cvfit, newx= data.matrix(X_test),
+                   s="lambda.min", type="response")
+pred2 = predict(cvfit1, newx= data.matrix(X_test),
+                   s="lambda.min", type="response")
+roc1 <- prediction(pred1, df.test$churn)
+roc2 <- prediction(pred2, df.test$churn)
+  
+  # calculates the ROC curve
+  perf1 <- performance(roc1,"tpr","fpr")
+  perf2 <- performance(roc2,"tpr","fpr")
+    plot(perf1, col="red")
+    plot(perf2, col = "blue", add = TRUE)
+    legend("bottomright",legend=c("Lasso", "Ridge"), col=c("red", "blue"),lty = 1)
+   performance(roc1, measure = "auc")@y.values[[1]]
+   performance(roc2, measure = "auc")@y.values[[1]]
+```
+
+
 
 ###### Decision Tree
 ```{r decision tree}
