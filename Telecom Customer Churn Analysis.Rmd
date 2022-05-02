@@ -202,7 +202,7 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(partykit)
     raw_data <- read_csv("Telecom_customer churn.csv")
 
-
+```
 
 * Missing Values
 
@@ -301,6 +301,24 @@ diag(Corr) = 0
 telecom_num_no_corr <-  r_mice[, !apply(Corr, 2, function(x) any(abs(x) > 0.9, na.rm = TRUE))]
 # How many variables are eliminated
 dim(r_mice)[2] - dim(telecom_num_no_corr)[2]
+```
+```{r heat map}
+corr_mat = round(cor(r_mice),2)
+
+corr_mat[lower.tri(corr_mat)] <- NA
+ 
+melted_corr_mat <- melt(corr_mat)
+
+ggplot(data = melted_corr_mat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Pearson\nCorrelation") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 90, vjust = 1, 
+    size = 3, hjust = 1),
+    axis.text.y = element_text(size = 3))+
+ coord_fixed()
 ```
 
 * Scaling
