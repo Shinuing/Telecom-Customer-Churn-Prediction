@@ -201,7 +201,8 @@ https://www.kaggle.com/datasets/abhinav89/telecom-customer
     library(glmnet)
     library(partykit)
     raw_data <- read_csv("Telecom_customer churn.csv")
-```
+
+
 
 * Missing Values
 
@@ -242,6 +243,11 @@ length(row_miss)
 telecom1 <- telecom1[-row_miss, ]
 
 save(telecom1, file = "telecom_Comsumer_Info.RData")
+```
+
+```{r frequency table}
+table(telecom1$churn)
+#0.5
 ```
 
 
