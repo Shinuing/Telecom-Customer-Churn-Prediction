@@ -285,10 +285,26 @@ r_mice <- select_if(telecom1, is.numeric)
 Corr <- cor(r_mice)
 #Corr[upper.tri(Corr)] = 0
 
-ggcorrplot(corr = Corr, method = "square", type = "lower")
-#
-library("PerformanceAnalytics")
-chart.Correlation(r_mice, histogram=TRUE, pch=19)
+ggcorrplot(corr = Corr, type = "lower")
+
+
+# devtools::install_github("laresbernardo/lares")
+library(lares)
+
+corr_cross(r_mice, # name of dataset
+  max_pvalue = 0.05, # display only significant correlations (at 5% level)
+  top = 10 # display top 10 couples of variables (by correlation coefficient)
+)
+
+
+col <- colorRampPalette(c("darkblue", "white", "darkorange"))(20)
+M <- cor(r_mice)
+heatmap(x = M, col = col, symm = TRUE)
+
+
+
+
+
 
 
 
@@ -661,7 +677,7 @@ sort(cooks.distance(fit2), decreasing = TRUE)[1:5]
 p = c("churn","totmrc_Mean","vceovr_Mean","change_mou","change_rev","drop_vce_Mean","drop_dat_Mean","blck_vce_Mean","drop_dat_Mean","threeway_Mean","mou_cvce_Mean","mou_rvce_Mean","owylis_vce_Mean","mou_opkv_Mean","drop_blk_Mean","months","uniqsubs","actvsubs","avgrev","hnd_price","phones","eqpdays","asl_flag","area","refurb_new","ethnic")
 selected.vars = df3[,p]
 c = cor(selected.vars[,-c(1,23:26)])
-corrplot(c)
+corrplot(c, type = "upper")
 ```
 
 
