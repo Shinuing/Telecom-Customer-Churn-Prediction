@@ -661,39 +661,34 @@ summary(back)
 ```
 
 
-```{r}
+```{r full_mod}
 fit1 = glm(as.factor(churn) ~ totmrc_Mean + vceovr_Mean + change_mou + 
     change_rev + drop_vce_Mean + drop_dat_Mean + blck_vce_Mean + 
     blck_dat_Mean + threeway_Mean + mou_cvce_Mean + mou_rvce_Mean + 
     owylis_vce_Mean + mou_opkv_Mean + drop_blk_Mean + months + 
     uniqsubs + actvsubs + avgrev + hnd_price + phones + eqpdays + 
-    asl_flag + area + refurb_new + ethnic,
-    family = binomial, data = df3)
+    as.factor(asl_flag) + as.factor(area) + as.factor(refurb_new) + as.factor(ethnic),family = binomial, data = df3)
 
 coeffs <- coefficients(fit1)
-#coeffsord <- coeffs[order(coeffs, decreasing = TRUE)]
-barplot(coeffsord, las=2)
+coeffsord <- coeffs[order(coeffs, decreasing = TRUE)]
+
 
 #par(mfrow=c(2,2))
 plot(cooks.distance(fit1), type="h")
 sort(cooks.distance(fit1), decreasing = TRUE)[1:5]
+
+par(mfrow=c(2,2))
+plot(fit1)
 ```
 
 
 ```{r}
-df4 = df3[-1094310,]
-
-fit2 = glm(churn ~ totmrc_Mean + vceovr_Mean + change_mou + 
-    change_rev + drop_vce_Mean + drop_dat_Mean + blck_vce_Mean + 
-    blck_dat_Mean + threeway_Mean + mou_cvce_Mean + mou_rvce_Mean + 
-    owylis_vce_Mean + mou_opkv_Mean + drop_blk_Mean + months + 
-    uniqsubs + actvsubs + avgrev + hnd_price + phones + eqpdays + 
-    asl_flag + area + refurb_new + ethnic,
-    family = binomial, data = df4)
-par(mfrow=c(2,2))
-plot(cooks.distance(fit2), type="h")
-sort(cooks.distance(fit2), decreasing = TRUE)[1:5]
+cvfit = cv.glmnet(data.matrix(X_train), y_train, family="binomial", type.measure="mse")
+A = predict(cvfit, newx=data.matrix(X_test), s="lambda.min", type="response")
+RMSE1 = mean((y_test - A)^2)
+RMSE1
 ```
+
 
 
 
@@ -719,28 +714,61 @@ y_test = df.test[,c("churn")]
 
 ###### Logistic Regression
 
-```{r en}
-# Elastic Net
- grid = 10^seq(10, -2, length = 100)
-cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0, lambda = grid)
-plot(cvfit)
-cvfit$index
-coef(cvfit, s=cvfit$lambda.min)
-cmat = confusion.glmnet(cvfit, newx = data.matrix(X_test), newy = y_test)
-cmat
+```{r ridge}
+# 
+set.seed(157)
+ridge.cv = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha = 0)
+ridge.lam = ridge.cv$lambda.min
+plot(ridge.cv)
+plot(ridge.cv$glmnet.fit, "lambda", label = TRUE)
 
-bestbeta = coef(cvfit, s = "lambda.min")
-  
-  # number of nonzero parameters
-  sum(as.numeric(bestbeta)!=0)
-   # the list of nonzero parameters
-  selected = data.frame("gene names" = rownames(bestbeta), 
-                        "beta" = as.numeric(bestbeta))[as.numeric(bestbeta)!=0, ]
-  
-  # sort
-  coef = selected[order(selected$beta, decreasing = TRUE), ]
-barplot(coef$beta, names = coef$gene.names, las=2)
+ridge.pred = predict(ridge.cv, newx = data.matrix(X_test), s = "lambda.min")
+
+ # the training error 
+mean((ridge.pred - y_test)^2)
+
+ridge.lam = ridge.cv$lambda.min
+grid = 10^seq(10, -2, length = 100)
+ridge_mod = glmnet(data.matrix(X_train), y_train, alpha=0, lambda = grid)
+ridge_pred = predict(ridge_mod, s = ridge.lam, newx = data.matrix(X_test),type="response")
+mean((ridge_pred - y_test)^2) 
+ridge_coef = predict(ridge_mod, type = "coefficients", s = ridge.lam)
+ridge_coef[ridge_coef!=0]
 ```
+
+
+
+```{r lasso}
+lasso.cv = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=1)
+plot(lasso.cv)
+plot(lasso.cv$glmnet.fit, "lambda", label = TRUE)
+lasso.lam = lasso.cv$lambda.min 
+grid = 10^seq(10, -2, length = 100)
+lasso_mod = glmnet(X_train, y_train, alpha = 1, lambda = grid)
+plot(lasso_mod, label = TRUE)
+lasso_pred = predict(lasso_mod, s = lasso.lam, newx = data.matrix(X_test),type="response")
+mean((lasso_pred - y_test)^2)
+lasso_coef = predict(lasso_mod, type = "coefficients", s = lasso.lam)
+lasso_coef[lasso_coef!=0]
+```
+
+
+
+```{r}
+enet.fit = cv.glmnet(data.matrix(X_train), y_train,family = "binomial", nfolds = 10, alpha = 0.5)
+plot(enet.fit)
+plot(enet.fit$glmnet.fit, "lambda", label = TRUE)
+enet.lam = enet.fit $lambda.min 
+grid = 10^seq(10, -2, length = 100)
+lasso_mod = glmnet(X_train, y_train, alpha = 1, lambda = grid)
+plot(lasso_mod, label = TRUE)
+lasso_pred = predict(lasso_mod, s = lasso.lam, newx = data.matrix(X_test),type="response")
+mean((lasso_pred - y_test)^2)
+lasso_coef = predict(lasso_mod, type = "coefficients", s = lasso.lam)
+lasso_coef[lasso_coef!=0]
+```
+
+
 
 
 ```{r class}
@@ -756,9 +784,9 @@ data.frame(sens, spec)
 ```
 
 
-```{r roc}
-#ROC
-cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 24, type.measure="auc", keep=TRUE)
+```{r auc}
+
+auc.cv = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 24, type.measure="auc", keep=TRUE)
 cvfit1$index
 plot(cvfit1)
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
@@ -785,9 +813,9 @@ barplot(coef$beta, names = coef$gene.names, las=2, main = "Coefficients")
 
 ```{r}
   library(ROCR)
-pred1 = predict(cvfit, newx= data.matrix(X_test),
+pred1 = predict(lasso.cv, newx= data.matrix(X_test),
                    s="lambda.min", type="response")
-pred2 = predict(cvfit1, newx= data.matrix(X_test),
+pred2 = predict(ridge.cv, newx= data.matrix(X_test),
                    s="lambda.min", type="response")
 roc1 <- prediction(pred1, df.test$churn)
 roc2 <- prediction(pred2, df.test$churn)
@@ -801,6 +829,9 @@ roc2 <- prediction(pred2, df.test$churn)
    performance(roc1, measure = "auc")@y.values[[1]]
    performance(roc2, measure = "auc")@y.values[[1]]
 ```
+
+
+
 
 
 
