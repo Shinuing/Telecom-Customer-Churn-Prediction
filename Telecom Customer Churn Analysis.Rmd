@@ -291,7 +291,7 @@ r_mice <- select_if(telecom1, is.numeric)
 Corr <- cor(r_mice)
 #Corr[upper.tri(Corr)] = 0
 
-ggcorrplot(corr = Corr, type = "lower")
+ggcorrplot(corr = Corr, type = "lower",tl.srt = 90, tl.cex = 8)
 
 
 # devtools::install_github("laresbernardo/lares")
@@ -682,8 +682,7 @@ sort(cooks.distance(fit2), decreasing = TRUE)[1:5]
 ```{r}
 p = c("churn","totmrc_Mean","vceovr_Mean","change_mou","change_rev","drop_vce_Mean","drop_dat_Mean","blck_vce_Mean","drop_dat_Mean","threeway_Mean","mou_cvce_Mean","mou_rvce_Mean","owylis_vce_Mean","mou_opkv_Mean","drop_blk_Mean","months","uniqsubs","actvsubs","avgrev","hnd_price","phones","eqpdays","asl_flag","area","refurb_new","ethnic")
 selected.vars = df3[,p]
-c = cor(selected.vars[,-c(1,23:26)])
-corrplot(c, type = "upper")
+ggcorrplot(cor(select_if(df3, is.numeric)), type = "lower")
 ```
 
 
@@ -704,7 +703,8 @@ y_test = df.test[,c("churn")]
 
 ```{r en}
 # Elastic Net
-cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, type.measure = "class")
+ grid = 10^seq(10, -2, length = 100)
+cvfit = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0, lambda = grid)
 plot(cvfit)
 cvfit$index
 coef(cvfit, s=cvfit$lambda.min)
