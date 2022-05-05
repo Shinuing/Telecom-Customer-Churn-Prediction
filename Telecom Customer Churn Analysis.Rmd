@@ -786,12 +786,12 @@ data.frame(sens, spec)
 
 ```{r auc}
 
-auc.cv = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 24, type.measure="auc", keep=TRUE)
+cvfit1 = cv.glmnet(data.matrix(X_train), y_train, family = "binomial", alpha=0.5, nlambda = 24, type.measure="auc", keep=TRUE)
 cvfit1$index
 plot(cvfit1)
 rocs = roc.glmnet(cvfit1$fit.preval, newy = y_train)
 best = cvfit1$index["min",]
-par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l", main = "ROC")
+par(pty="s", mar=c(4,4,0.1,0.1)); plot(rocs[[best]], type = "l")
 invisible(sapply(rocs, lines, col="orange"))
 lines(rocs[[best]], lwd = 2, col = "blue"); lines(c(0,1),c(0,1), lty=2)
 
@@ -811,6 +811,12 @@ barplot(coef$beta, names = coef$gene.names, las=2, main = "Coefficients")
 ```
 
 
+
+```{r}
+cvfit0 = cv.glmnet(data.matrix(X_train), y_train, family="binomial")
+pred0 = predict(cvfit0, newx=data.matrix(X_test), s="lambda.min", type="response")
+```
+
 ```{r}
   library(ROCR)
 pred1 = predict(lasso.cv, newx= data.matrix(X_test),
@@ -819,15 +825,19 @@ pred2 = predict(ridge.cv, newx= data.matrix(X_test),
                    s="lambda.min", type="response")
 roc1 <- prediction(pred1, df.test$churn)
 roc2 <- prediction(pred2, df.test$churn)
+roc0 <- prediction(pred0, df.test$churn)
   
   # calculates the ROC curve
   perf1 <- performance(roc1,"tpr","fpr")
   perf2 <- performance(roc2,"tpr","fpr")
+  perf0 <- performance(roc0,"tpr","fpr")
     plot(perf1, col="red")
     plot(perf2, col = "blue", add = TRUE)
-    legend("bottomright",legend=c("Lasso", "Ridge"), col=c("red", "blue"),lty = 1)
+    plot(perf0, col = "green", add = TRUE)
+    legend("bottomright",legend=c("Lasso", "Ridge", "GLM"), col=c("red", "blue", "green"),lty = 1)
    performance(roc1, measure = "auc")@y.values[[1]]
    performance(roc2, measure = "auc")@y.values[[1]]
+   performance(roc0, measure = "auc")@y.values[[1]]
 ```
 
 
